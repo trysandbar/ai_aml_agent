@@ -42,9 +42,8 @@ async def main():
     # Storage state file for auth caching
     storage_state_file = Path("./clients/[sandbar]/auth_state.json")
 
-    # Use headless=False for initial login (so user can see/interact), headless=True for cached auth runs
-    use_headless = storage_state_file.exists()
-    async with PlaywrightClient(headless=use_headless, storage_state=str(storage_state_file) if storage_state_file.exists() else None) as browser:
+    # Always use headless mode
+    async with PlaywrightClient(headless=True, storage_state=str(storage_state_file) if storage_state_file.exists() else None) as browser:
         screenshot_dir = Path("./test_screenshots/[sandbar]")
         screenshot_dir.mkdir(parents=True, exist_ok=True)
 
