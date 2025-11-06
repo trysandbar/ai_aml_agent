@@ -16,8 +16,9 @@
 9. Read through the page and make a decision: is a match or is not a match. Use the page data and AI Summary (if present) to guide you.
 10. Decision the person using keyboard shortcuts:
     - Press 'y' for match or 'n' for not a match
-    - Press 'r' to specify match reason
-    - Press 'd' to add details
+    - Select match reason: Press 1 (Name), 2 (Address), 3 (Date), or 4 (Other)
+    - Press 'r' to specify reasoning, then type reasoning text
+    - Press 'd' to add details, then type details text
     - Press Command+Enter (⌘+↵) to submit the decision
 11. Return to the customers page.
 12. Repeat steps 7-11 for exactly ONE more customer (2 customers total).

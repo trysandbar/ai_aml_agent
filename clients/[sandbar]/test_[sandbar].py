@@ -536,6 +536,41 @@ async def main():
             await asyncio.sleep(3)
             await browser.screenshot(f"step_07_customer_{customer_num}_detail", path=screenshot_dir / f"step_07_customer_{customer_num}_detail.png", save_metadata=True)
 
+            # Extract customer name from the page
+            customer_name = await browser.evaluate("""
+                (() => {
+                    // Try to find customer name in various locations
+                    const nameSelectors = [
+                        'h1', 'h2',
+                        '[data-testid="customer-name"]',
+                        '.customer-name',
+                        'div:has-text("Person") + div'
+                    ];
+
+                    for (const sel of nameSelectors) {
+                        const el = document.querySelector(sel);
+                        if (el && el.textContent.trim()) {
+                            return el.textContent.trim();
+                        }
+                    }
+
+                    // Fallback: look for "Person" label and get next text
+                    const labels = Array.from(document.querySelectorAll('*'));
+                    for (const label of labels) {
+                        if (label.textContent.trim() === 'Person') {
+                            const parent = label.parentElement;
+                            if (parent) {
+                                const nextText = parent.textContent.replace('Person', '').trim();
+                                if (nextText) return nextText;
+                            }
+                        }
+                    }
+
+                    return 'Unknown Customer';
+                })()
+            """)
+            print(f"   👤 Customer name: {customer_name}")
+
             # Step 8: Wait for AI Summary (may or may not appear)
             print(f"\n📍 Step 8 (Customer {customer_num}): Wait for AI Summary (5-7 seconds)")
             await asyncio.sleep(7)
@@ -587,22 +622,108 @@ Respond with ONLY one word: MATCH or NOTMATCH"""
             await asyncio.sleep(2)
             await browser.screenshot(f"step_10b_customer_{customer_num}_after_yn", path=screenshot_dir / f"step_10b_customer_{customer_num}_after_yn.png", save_metadata=True)
 
-            # Step 10b: Press 'r' to specify reasoning
+            # Step 10b: Select match reason (1=Name, 2=Address, 3=Date, 4=Other)
+            # Use LLM to decide which reason based on page content
+            reason_prompt = f"""Based on this AML customer data, which matching factor is most relevant? Choose ONE:
+1. Name similarity
+2. Address match
+3. Date of birth match
+4. Other factors
+
+Customer: {customer_name}
+Context: {page_content[:500]}
+
+Respond with ONLY the number (1, 2, 3, or 4)."""
+
+            reason_response = llm.chat_completion(
+                messages=[{"role": "user", "content": reason_prompt}],
+                model="meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+                temperature=0.1,
+                max_tokens=5
+            )
+            reason_choice = reason_response.choices[0].message.content.strip()
+            # Extract just the digit
+            reason_digit = ''.join(c for c in reason_choice if c.isdigit())[:1] or '1'
+            reason_names = {
+                '1': 'Name',
+                '2': 'Address',
+                '3': 'Date',
+                '4': 'Other'
+            }
+            print(f"   🤖 Selected match reason: {reason_digit} ({reason_names.get(reason_digit, 'Name')})")
+
+            await browser.page.keyboard.press(reason_digit)
+            await asyncio.sleep(1)
+            await browser.screenshot(f"step_10c_customer_{customer_num}_reason_selected", path=screenshot_dir / f"step_10c_customer_{customer_num}_reason_selected.png", save_metadata=True)
+
+            # Step 10d: Press 'r' to specify reasoning
             await browser.page.keyboard.press('r')
             print(f"   ✅ Pressed 'r' (Specify match reason)")
             await asyncio.sleep(1)
+            await browser.screenshot(f"step_10d_customer_{customer_num}_after_r", path=screenshot_dir / f"step_10d_customer_{customer_num}_after_r.png", save_metadata=True)
 
-            # Step 10c: Press 'd' to add details
+            # Generate reasoning using LLM
+            reasoning_prompt = f"""Based on this AML customer profile, provide a brief 1-2 sentence reasoning for why this is a {'match' if is_match else 'not a match'}:
+
+Customer: {customer_name}
+Decision: {decision}
+
+Context from page:
+{page_content[:1000]}
+
+Provide ONLY the reasoning text (1-2 sentences), no other commentary."""
+
+            reasoning_response = llm.chat_completion(
+                messages=[{"role": "user", "content": reasoning_prompt}],
+                model="meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+                temperature=0.3,
+                max_tokens=100
+            )
+            reasoning = reasoning_response.choices[0].message.content.strip()
+            print(f"   🤖 Generated reasoning: {reasoning[:100]}...")
+
+            # Type the reasoning
+            await browser.page.keyboard.type(reasoning)
+            await asyncio.sleep(1)
+            await browser.screenshot(f"step_10e_customer_{customer_num}_reasoning_entered", path=screenshot_dir / f"step_10e_customer_{customer_num}_reasoning_entered.png", save_metadata=True)
+
+            # Step 10f: Press 'd' to add details
             await browser.page.keyboard.press('d')
             print(f"   ✅ Pressed 'd' (Add details)")
             await asyncio.sleep(1)
+            await browser.screenshot(f"step_10f_customer_{customer_num}_after_d", path=screenshot_dir / f"step_10f_customer_{customer_num}_after_d.png", save_metadata=True)
 
-            # Step 10d: Press Command+Enter to submit
+            # Generate details using LLM
+            details_prompt = f"""Based on this AML alert, provide specific details about the matching factors or discrepancies (2-3 sentences):
+
+Customer: {customer_name}
+Decision: {'Match' if is_match else 'Not a match'}
+
+Context from page:
+{page_content[:1000]}
+
+Provide ONLY the details text (2-3 sentences), no other commentary."""
+
+            details_response = llm.chat_completion(
+                messages=[{"role": "user", "content": details_prompt}],
+                model="meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+                temperature=0.3,
+                max_tokens=150
+            )
+            details = details_response.choices[0].message.content.strip()
+            print(f"   🤖 Generated details: {details[:100]}...")
+
+            # Type the details
+            await browser.page.keyboard.type(details)
+            await asyncio.sleep(1)
+            await browser.screenshot(f"step_10g_customer_{customer_num}_details_entered", path=screenshot_dir / f"step_10g_customer_{customer_num}_details_entered.png", save_metadata=True)
+
+            # Step 10h: Press Command+Enter to submit
             await browser.page.keyboard.press('Meta+Enter')
             print(f"   ✅ Pressed Command+Enter to submit decision")
             await asyncio.sleep(3)
 
-            await browser.screenshot(f"step_10_customer_{customer_num}_decision_submitted", path=screenshot_dir / f"step_10_customer_{customer_num}_decision_submitted.png", save_metadata=True)
+            await browser.screenshot(f"step_10h_customer_{customer_num}_decision_submitted", path=screenshot_dir / f"step_10h_customer_{customer_num}_decision_submitted.png", save_metadata=True)
 
             # Step 11: Return to customers page
             print(f"\n📍 Step 11 (Customer {customer_num}): Return to customers page")
