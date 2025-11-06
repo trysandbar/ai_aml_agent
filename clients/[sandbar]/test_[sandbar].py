@@ -60,7 +60,7 @@ async def main():
             # Step 1: Navigate to homepage
             print("\n📍 Step 1: Navigate to homepage")
             await browser.navigate("https://app.dev.sandbar.ai")
-            await browser.screenshot("step_01_homepage", path=screenshot_dir / "step_01_homepage.png", save_metadata=True)
+            await browser.screenshot("step_01_homepage", path=screenshot_dir / "step_01_homepage.png", full_page=True, save_metadata=True)
             print("✅ Loaded homepage")
             await asyncio.sleep(2)
 
@@ -80,7 +80,7 @@ async def main():
                 })()
             """)
             await asyncio.sleep(3)
-            await browser.screenshot("step_02_google_signin", path=screenshot_dir / "step_02_google_signin.png", save_metadata=True)
+            await browser.screenshot("step_02_google_signin", path=screenshot_dir / "step_02_google_signin.png", full_page=True, save_metadata=True)
             print("✅ Clicked Google sign-in")
 
             # Step 3: Enter Google email
@@ -105,7 +105,7 @@ async def main():
 
             await browser.page.fill('input[type="email"]', email)
             await asyncio.sleep(1)
-            await browser.screenshot("step_03_email_entered", path=screenshot_dir / "step_03_email_entered.png", save_metadata=True)
+            await browser.screenshot("step_03_email_entered", path=screenshot_dir / "step_03_email_entered.png", full_page=True, save_metadata=True)
             print("✅ Entered email")
 
             # Step 4a: Click Next after email
@@ -133,7 +133,7 @@ async def main():
 
             await browser.page.fill('input[type="password"]', password)
             await asyncio.sleep(1)
-            await browser.screenshot("step_04_password_entered", path=screenshot_dir / "step_04_password_entered.png", save_metadata=True)
+            await browser.screenshot("step_04_password_entered", path=screenshot_dir / "step_04_password_entered.png", full_page=True, save_metadata=True)
             print("✅ Entered password")
 
             # Step 4c: Click Next to submit
@@ -155,7 +155,7 @@ async def main():
 
             # Step 5: Handle 2FA
             print("\n📍 Step 5: Handle 2FA")
-            await browser.screenshot("step_05_2fa_prompt", path=screenshot_dir / "step_05_2fa_prompt.png", save_metadata=True)
+            await browser.screenshot("step_05_2fa_prompt", path=screenshot_dir / "step_05_2fa_prompt.png", full_page=True, save_metadata=True)
 
             # Check if SMS fallback is needed (push greyed out)
             sms_clicked = await browser.evaluate("""
@@ -204,7 +204,7 @@ async def main():
 
             # Step 5b: Select tenant 'Current'
             print("\n📍 Step 5b: Select tenant 'Current'")
-            await browser.screenshot("step_05b_tenant_list", path=screenshot_dir / "step_05b_tenant_list.png", save_metadata=True)
+            await browser.screenshot("step_05b_tenant_list", path=screenshot_dir / "step_05b_tenant_list.png", full_page=True, save_metadata=True)
 
             tenant_clicked = await browser.evaluate("""
                 (() => {
@@ -232,7 +232,7 @@ async def main():
             # Cached auth - go directly to customers page
             print("\n📍 Navigating to customers page with cached auth...")
             await browser.navigate("https://app.dev.sandbar.ai/current/views/all")
-            await browser.screenshot("step_01_cached", path=screenshot_dir / "step_01_cached.png", save_metadata=True)
+            await browser.screenshot("step_01_cached", path=screenshot_dir / "step_01_cached.png", full_page=True, save_metadata=True)
             await asyncio.sleep(3)
 
         # Step 6: Verify we're on customers page
@@ -245,7 +245,7 @@ async def main():
             await asyncio.sleep(3)
 
         current_url = browser.page.url
-        await browser.screenshot("step_06_customers_page", path=screenshot_dir / "step_06_customers_page.png", save_metadata=True)
+        await browser.screenshot("step_06_customers_page", path=screenshot_dir / "step_06_customers_page.png", full_page=True, save_metadata=True)
 
         if 'views/all' in current_url:
             print(f"   ✅ On customers page: {current_url}")
@@ -260,7 +260,7 @@ async def main():
         print("\n📍 Step 6b: Open filters (F keyboard shortcut)")
         await browser.page.keyboard.press('f')
         await asyncio.sleep(1)
-        await browser.screenshot("step_06b_filters_open", path=screenshot_dir / "step_06b_filters_open.png", save_metadata=True)
+        await browser.screenshot("step_06b_filters_open", path=screenshot_dir / "step_06b_filters_open.png", full_page=True, save_metadata=True)
         print("✅ Opened filters")
 
         # Step 6c: Click 'Alert status' filter
@@ -279,7 +279,7 @@ async def main():
             })()
         """)
         await asyncio.sleep(1)
-        await browser.screenshot("step_06c_alert_status_clicked", path=screenshot_dir / "step_06c_alert_status_clicked.png", save_metadata=True)
+        await browser.screenshot("step_06c_alert_status_clicked", path=screenshot_dir / "step_06c_alert_status_clicked.png", full_page=True, save_metadata=True)
         print("✅ Clicked 'Alert status'")
 
         # Step 6d: Select 'Open' alert status
@@ -303,13 +303,13 @@ async def main():
             })()
         """)
         await asyncio.sleep(1)
-        await browser.screenshot("step_06d_open_selected", path=screenshot_dir / "step_06d_open_selected.png", save_metadata=True)
+        await browser.screenshot("step_06d_open_selected", path=screenshot_dir / "step_06d_open_selected.png", full_page=True, save_metadata=True)
         print("✅ Selected 'Open' alert status")
 
         # Step 6e: Close filters
         await browser.page.keyboard.press('Escape')
         await asyncio.sleep(2)
-        await browser.screenshot("step_06e_filters_closed", path=screenshot_dir / "step_06e_filters_closed.png", save_metadata=True)
+        await browser.screenshot("step_06e_filters_closed", path=screenshot_dir / "step_06e_filters_closed.png", full_page=True, save_metadata=True)
         print("✅ Closed filters - showing open alerts only")
 
         # Step 6f: Load more customers to get past first 10 rows and find non-PEP customers
@@ -443,7 +443,7 @@ async def main():
         else:
             print(f"   ⚠️  Only found {non_pep_count} non-PEP customers - may not have enough")
 
-        await browser.screenshot("step_06f_after_load_more", path=screenshot_dir / "step_06f_after_load_more.png", save_metadata=True)
+        await browser.screenshot("step_06f_after_load_more", path=screenshot_dir / "step_06f_after_load_more.png", full_page=True, save_metadata=True)
 
         # Steps 7-13: Customer review workflow (process 2 customers)
         print("\n📍 Steps 7-13: Customer review workflow")
@@ -534,7 +534,7 @@ async def main():
                 print("   ⚠️  No valid customer found (not PEP, past row 10)")
 
             await asyncio.sleep(3)
-            await browser.screenshot(f"step_07_customer_{customer_num}_detail", path=screenshot_dir / f"step_07_customer_{customer_num}_detail.png", save_metadata=True)
+            await browser.screenshot(f"step_07_customer_{customer_num}_detail", path=screenshot_dir / f"step_07_customer_{customer_num}_detail.png", full_page=True, save_metadata=True)
 
             # Extract customer name from the page
             customer_name = await browser.evaluate("""
@@ -574,7 +574,7 @@ async def main():
             # Step 8: Wait for AI Summary (may or may not appear)
             print(f"\n📍 Step 8 (Customer {customer_num}): Wait for AI Summary (5-7 seconds)")
             await asyncio.sleep(7)
-            await browser.screenshot(f"step_08_customer_{customer_num}_after_wait", path=screenshot_dir / f"step_08_customer_{customer_num}_after_wait.png", save_metadata=True)
+            await browser.screenshot(f"step_08_customer_{customer_num}_after_wait", path=screenshot_dir / f"step_08_customer_{customer_num}_after_wait.png", full_page=True, save_metadata=True)
             print("   ✅ Wait complete")
 
             # Step 9: Read page and make decision using LLM
@@ -731,7 +731,7 @@ Provide ONLY the details text (2-3 sentences), no other commentary."""
             await asyncio.sleep(0.2)
             await browser.page.keyboard.press('c')
             await asyncio.sleep(3)
-            await browser.screenshot(f"step_11_customer_{customer_num}_back_to_list", path=screenshot_dir / f"step_11_customer_{customer_num}_back_to_list.png", save_metadata=True)
+            await browser.screenshot(f"step_11_customer_{customer_num}_back_to_list", path=screenshot_dir / f"step_11_customer_{customer_num}_back_to_list.png", full_page=True, save_metadata=True)
             print("   ✅ Back to customers page")
 
         # Step 13: Logout
@@ -762,7 +762,7 @@ Provide ONLY the details text (2-3 sentences), no other commentary."""
             if menu_clicked:
                 print("   ✅ Opened menu")
                 await asyncio.sleep(1)
-                await browser.screenshot("step_13_logout_menu", path=screenshot_dir / "step_13_logout_menu.png", save_metadata=True)
+                await browser.screenshot("step_13_logout_menu", path=screenshot_dir / "step_13_logout_menu.png", full_page=True, save_metadata=True)
 
                 # Click Logout option
                 logout_clicked = await browser.evaluate("""
@@ -783,7 +783,7 @@ Provide ONLY the details text (2-3 sentences), no other commentary."""
                 if logout_clicked:
                     print("   ✅ Clicked logout")
                     await asyncio.sleep(2)
-                    await browser.screenshot("step_13_logged_out", path=screenshot_dir / "step_13_logged_out.png", save_metadata=True)
+                    await browser.screenshot("step_13_logged_out", path=screenshot_dir / "step_13_logged_out.png", full_page=True, save_metadata=True)
                 else:
                     print("   ⚠️  Could not find logout option")
             else:
