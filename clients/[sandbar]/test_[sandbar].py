@@ -699,15 +699,38 @@ Provide ONLY the reasoning text (1-2 sentences), no other commentary."""
             reasoning = reasoning_response.choices[0].message.content.strip()
             print(f"   🤖 Generated reasoning: {reasoning[:100]}...")
 
-            # Type the reasoning
-            await browser.page.keyboard.type(reasoning)
+            # Set the field value directly instead of typing
+            await browser.evaluate(f"""
+                (() => {{
+                    const field = document.querySelector('input[type="text"], textarea');
+                    if (field) {{
+                        field.value = {repr(reasoning)};
+                        field.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                        field.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                    }}
+                }})()
+            """)
             await asyncio.sleep(1)
             await browser.screenshot(f"step_10e_customer_{customer_num}_reasoning_entered", path=screenshot_dir / f"step_10e_customer_{customer_num}_reasoning_entered.png", full_page=True, save_metadata=True)
 
             # Step 10f: Press 'd' to add details
             await browser.page.keyboard.press('d')
             print(f"   ✅ Pressed 'd' (Add details)")
-            await asyncio.sleep(3)  # Wait longer for popup and auto-focus
+            await asyncio.sleep(0.5)
+
+            # Click into the textarea and clear it
+            await browser.evaluate("""
+                (() => {
+                    const textarea = document.querySelector('textarea');
+                    if (textarea) {
+                        textarea.click();
+                        textarea.focus();
+                        textarea.value = '';  // Clear any existing text
+                        textarea.setSelectionRange(0, 0);  // Set cursor to start
+                    }
+                })()
+            """)
+            await asyncio.sleep(0.2)
             await browser.screenshot(f"step_10f_customer_{customer_num}_after_d", path=screenshot_dir / f"step_10f_customer_{customer_num}_after_d.png", full_page=True, save_metadata=True)
 
             # Generate details using LLM
@@ -730,8 +753,17 @@ Provide ONLY the details text (2-3 sentences), no other commentary."""
             details = details_response.choices[0].message.content.strip()
             print(f"   🤖 Generated details: {details[:100]}...")
 
-            # Type the details
-            await browser.page.keyboard.type(details)
+            # Set the textarea value directly instead of typing
+            await browser.evaluate(f"""
+                (() => {{
+                    const textarea = document.querySelector('textarea');
+                    if (textarea) {{
+                        textarea.value = {repr(details)};
+                        textarea.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                        textarea.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                    }}
+                }})()
+            """)
             await asyncio.sleep(1)
             await browser.screenshot(f"step_10g_customer_{customer_num}_details_entered", path=screenshot_dir / f"step_10g_customer_{customer_num}_details_entered.png", full_page=True, save_metadata=True)
 
