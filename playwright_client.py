@@ -149,16 +149,20 @@ class PlaywrightClient:
     async def screenshot(self, name: str, path: Optional[Path] = None,
                         selector: Optional[str] = None,
                         full_page: bool = False,
-                        save_metadata: bool = True) -> Optional[str]:
+                        save_metadata: bool = True,
+                        tenant_slug: Optional[str] = None,
+                        session_id: Optional[str] = None) -> Optional[str]:
         """
         Take a screenshot and return as base64.
 
         Args:
             name: Name for the screenshot
-            path: Optional path to save screenshot to disk
+            path: Optional path to save screenshot to disk (overrides tenant/session structure)
             selector: Optional CSS selector to screenshot specific element
             full_page: Capture full scrollable page (default: False)
             save_metadata: Save JSON metadata file with URL, timestamp, etc. (default: True)
+            tenant_slug: Tenant identifier for S3-ready directory structure
+            session_id: Session identifier for organizing screenshots
 
         Returns:
             Screenshot as base64 string, or None if failed
@@ -189,18 +193,25 @@ class PlaywrightClient:
                 # Full page or viewport screenshot
                 screenshot_bytes = await self.page.screenshot(full_page=full_page)
 
-            # Save to disk if path provided
-            if path:
-                path.parent.mkdir(parents=True, exist_ok=True)
-                with open(path, 'wb') as f:
+            # Determine save path using S3-ready structure or explicit path
+            save_path = path
+            if not save_path and tenant_slug and session_id:
+                # Use S3-ready directory structure: ai_agent_audit/{tenant}/{session}/screenshots/
+                base_dir = Path("ai_agent_audit") / tenant_slug / session_id / "screenshots"
+                save_path = base_dir / f"{name}.png"
+
+            # Save to disk if path determined
+            if save_path:
+                save_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(save_path, 'wb') as f:
                     f.write(screenshot_bytes)
-                logger.info(f"📸 Screenshot saved to disk: {path} ({len(screenshot_bytes)} bytes)")
+                logger.info(f"📸 Screenshot saved to disk: {save_path} ({len(screenshot_bytes)} bytes)")
 
                 # Save metadata JSON alongside screenshot
                 if save_metadata:
                     metadata = {
                         "screenshot_name": name,
-                        "screenshot_path": str(path),
+                        "screenshot_path": str(save_path),
                         "screenshot_size_bytes": len(screenshot_bytes),
                         "url": current_url,
                         "page_title": page_title,
@@ -209,10 +220,12 @@ class PlaywrightClient:
                         "full_page": full_page,
                         "selector": selector,
                         "browser": "chromium",
-                        "headless": self.headless
+                        "headless": self.headless,
+                        "tenant_slug": tenant_slug,
+                        "session_id": session_id
                     }
 
-                    metadata_path = path.with_suffix('.json')
+                    metadata_path = save_path.with_suffix('.json')
                     with open(metadata_path, 'w') as f:
                         json.dump(metadata, f, indent=2)
                     logger.info(f"📋 Metadata saved: {metadata_path}")
@@ -494,9 +507,11 @@ class SyncPlaywrightClient:
         return self._run_async(self.client.navigate(url, wait_until))
 
     def screenshot(self, name: str, path: Optional[Path] = None,
-                  selector: Optional[str] = None, full_page: bool = False) -> Optional[str]:
+                  selector: Optional[str] = None, full_page: bool = False,
+                  tenant_slug: Optional[str] = None, session_id: Optional[str] = None) -> Optional[str]:
         """Take screenshot."""
-        return self._run_async(self.client.screenshot(name, path, selector, full_page))
+        return self._run_async(self.client.screenshot(name, path, selector, full_page,
+                                                       tenant_slug=tenant_slug, session_id=session_id))
 
     def click(self, selector: str, timeout: int = 30000) -> bool:
         """Click element."""
