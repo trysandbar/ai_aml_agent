@@ -12,23 +12,23 @@ AI AML Agent is a browser automation system for AML (Anti-Money Laundering) veri
 
 ## Development Commands
 
-### Setup & Running
+**Full setup and testing instructions**: See [TESTING.md](TESTING.md)
+
+### Quick Reference
 
 ```bash
-# Install dependencies
+# Setup (first time)
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 playwright install chromium
 
-# Configure API key
-cp .env.example .env
-# Edit .env and add TOGETHER_API_KEY
+# Configure environment
+cp .env.example .env  # Add TOGETHER_API_KEY
+direnv allow          # Auto-load .env
 
 # Run tests
-python test_playwright_llama.py
-python test_amazon_real.py
-
-# Enable Python 3.14 JIT (20-30% performance boost)
-export PYTHON_JIT=1
+source venv/bin/activate
 python test_amazon_real.py
 ```
 
