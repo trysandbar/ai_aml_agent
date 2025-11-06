@@ -32,23 +32,25 @@ class PlaywrightClient:
     Integrates with BrowserAgent and Llama 4 decision making.
     """
 
-    def __init__(self, headless: bool = True, browser_type: str = "chromium"):
+    def __init__(self, headless: bool = True, browser_type: str = "chromium", storage_state: Optional[str] = None):
         """
         Initialize Playwright client.
 
         Args:
             headless: Run browser in headless mode (default: True)
             browser_type: Browser to use - chromium, firefox, or webkit (default: chromium)
+            storage_state: Path to storage state file for auth persistence (optional)
         """
         self.headless = headless
         self.browser_type = browser_type
+        self.storage_state = storage_state
         self.playwright = None
         self.browser: Optional[Browser] = None
         self.context: Optional[BrowserContext] = None
         self.page: Optional[Page] = None
         self.current_url: Optional[str] = None
 
-        logger.info(f"🌐 Playwright Client initialized (headless={headless}, browser={browser_type})")
+        logger.info(f"🌐 Playwright Client initialized (headless={headless}, browser={browser_type}, storage_state={storage_state})")
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -88,10 +90,17 @@ class PlaywrightClient:
             )
 
             # Create browser context (isolated session)
-            self.context = await self.browser.new_context(
-                viewport={'width': 1280, 'height': 800},
-                user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            )
+            context_options = {
+                'viewport': {'width': 1280, 'height': 800},
+                'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+
+            # Load storage state if provided and file exists
+            if self.storage_state and Path(self.storage_state).exists():
+                context_options['storage_state'] = self.storage_state
+                logger.info(f"📂 Loading auth state from {self.storage_state}")
+
+            self.context = await self.browser.new_context(**context_options)
 
             # Create page
             self.page = await self.context.new_page()
@@ -100,6 +109,24 @@ class PlaywrightClient:
 
         except Exception as e:
             logger.error(f"❌ Failed to start browser: {e}")
+            raise
+
+    async def save_storage_state(self, path: str):
+        """
+        Save current authentication state to file.
+
+        Args:
+            path: Path to save storage state JSON file
+        """
+        try:
+            if not self.context:
+                raise RuntimeError("Browser context not available")
+
+            await self.context.storage_state(path=path)
+            logger.info(f"💾 Saved auth state to {path}")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to save storage state: {e}")
             raise
 
     async def close(self):

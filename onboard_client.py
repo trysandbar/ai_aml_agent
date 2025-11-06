@@ -106,11 +106,11 @@ import os
 import sys
 from pathlib import Path
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add parent directory to path (go up twice: clients/<client_id>/ -> clients/ -> root/)
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Load .env
-env_file = Path(__file__).parent.parent / '.env'
+env_file = Path(__file__).parent.parent.parent / '.env'
 if env_file.exists():
     with open(env_file) as f:
         for line in f:
@@ -148,10 +148,31 @@ async def main():
         print("\\n📍 Step {i}: {step}")
 
         # TODO: Implement this step
-        # Use browser.navigate(), browser.fill(), browser.click(), etc.
-        # Use browser.evaluate() to find selectors dynamically
+        # Example pattern for clicking buttons (like test_amazon_real.py):
+        # clicked = await browser.evaluate("""
+        #     (() => {{
+        #         const selectors = ['#button-id', '.button-class', '[data-testid="button"]'];
+        #         for (const sel of selectors) {{
+        #             const el = document.querySelector(sel);
+        #             if (el && el.offsetParent !== null) {{
+        #                 el.click();
+        #                 return true;
+        #             }}
+        #         }}
+        #         // Text-based fallback
+        #         const buttons = Array.from(document.querySelectorAll('button, a'));
+        #         for (const btn of buttons) {{
+        #             const text = (btn.textContent || '').toLowerCase();
+        #             if (text.includes('search text here') && btn.offsetParent !== null) {{
+        #                 btn.click();
+        #                 return true;
+        #             }}
+        #         }}
+        #         return false;
+        #     }})()
+        # """)
 
-        await browser.screenshot("step_{i:02d}", path=screenshot_dir / "step_{i:02d}.png")
+        await browser.screenshot("step_{i:02d}", path=screenshot_dir / "step_{i:02d}.png", save_metadata=True)
         await asyncio.sleep(1)
 '''
 

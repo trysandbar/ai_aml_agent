@@ -1,0 +1,33 @@
+client_id: '[sandbar]'
+client_name: '[Sandbar]'
+environment: staging
+enabled: false
+website:
+  base_url: '[https://app.dev.sandbar.ai]'
+  rate_limit:
+    requests_per_minute: 10
+    burst_capacity: 5
+  selectors: {}
+workflows:
+- name: main_workflow
+  enabled: false
+  description: Auto-generated from requirements
+  timeout_seconds: 300
+  steps:
+  - action: navigate
+    url: '[https://app.dev.sandbar.ai]'
+    screenshot: homepage
+notes: '- Website uses 2FA via phone push notification (not SMS code)
+
+  - Username and password are in .env: GOOGLE_LOGIN and GOOGLE_PW
+
+  - Rate limit: 10 requests per minute
+
+  - Session expires after 30 minutes
+
+  - Must accept cookies before login
+
+  - AI Summary may or may not be present on customer detail pages - wait 5-7 seconds
+  only if not immediately visible
+
+  '
