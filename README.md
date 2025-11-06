@@ -20,9 +20,21 @@ cp .env.example .env
 # Basic integration test
 python test_playwright_llama.py
 
-# Amazon shopping flow (real example)
+# Amazon shopping flow (reference example)
 python test_amazon_real.py
+
+# Sandbar AML workflow (production client)
+source venv/bin/activate
+python clients/[sandbar]/test_[sandbar].py
 ```
+
+**Sandbar Features:**
+- Google SSO + 2FA authentication
+- Auth state caching (`auth_state.json`)
+- Customer filtering (Open Alerts)
+- LLM-based decision making (Llama 4 Maverick)
+- Keyboard shortcut automation (y/n for decisions, g+c for navigation)
+- Full screenshot + metadata audit trail
 
 ## Onboard New Client
 

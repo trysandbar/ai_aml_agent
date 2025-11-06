@@ -106,11 +106,11 @@ import os
 import sys
 from pathlib import Path
 
-# Add parent directory to path (go up twice: clients/<client_id>/ -> clients/ -> root/)
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# Add parent directory to path (go up 2 levels: clients/<client_id>/ -> root/)
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Load .env
-env_file = Path(__file__).parent.parent.parent / '.env'
+env_file = Path(__file__).parent.parent / '.env'
 if env_file.exists():
     with open(env_file) as f:
         for line in f:
@@ -148,29 +148,17 @@ async def main():
         print("\\n📍 Step {i}: {step}")
 
         # TODO: Implement this step
-        # Example pattern for clicking buttons (like test_amazon_real.py):
-        # clicked = await browser.evaluate("""
-        #     (() => {{
-        #         const selectors = ['#button-id', '.button-class', '[data-testid="button"]'];
-        #         for (const sel of selectors) {{
-        #             const el = document.querySelector(sel);
-        #             if (el && el.offsetParent !== null) {{
-        #                 el.click();
-        #                 return true;
-        #             }}
-        #         }}
-        #         // Text-based fallback
-        #         const buttons = Array.from(document.querySelectorAll('button, a'));
-        #         for (const btn of buttons) {{
-        #             const text = (btn.textContent || '').toLowerCase();
-        #             if (text.includes('search text here') && btn.offsetParent !== null) {{
-        #                 btn.click();
-        #                 return true;
-        #             }}
-        #         }}
-        #         return false;
-        #     }})()
-        # """)
+        # See reference implementations:
+        # - test_amazon_real.py: basic navigation, clicking, form filling
+        # - clients/[sandbar]/test_[sandbar].py: auth caching, keyboard shortcuts, LLM decisions
+        #
+        # Common patterns (see CLAUDE.md for details):
+        # - Navigate: await browser.navigate("https://url.com")
+        # - Dynamic selectors: await browser.evaluate("(...JS to find element...)")
+        # - Fill forms: await browser.page.fill('input[name="field"]', 'value')
+        # - Click: element.click() inside browser.evaluate()
+        # - Keyboard: await browser.page.keyboard.press('Enter')
+        # - Wait: await asyncio.sleep(seconds)
 
         await browser.screenshot("step_{i:02d}", path=screenshot_dir / "step_{i:02d}.png", save_metadata=True)
         await asyncio.sleep(1)

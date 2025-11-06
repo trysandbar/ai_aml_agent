@@ -57,17 +57,40 @@ This test demonstrates:
 
 Screenshots are saved to `test_screenshots/amazon_real/` with JSON metadata.
 
-## Client Onboarding Tests
+## Client Tests
+
+### Sandbar (Production Client)
 
 ```bash
-# Activate venv
+# Full run (with login)
 source venv/bin/activate
+python clients/[sandbar]/test_[sandbar].py
 
-# Onboard new client
+# Clean auth cache and re-login
+rm -f clients/[sandbar]/auth_state.json
+python clients/[sandbar]/test_[sandbar].py
+```
+
+**Features:**
+- Processes 1 customer with open AML alerts
+- Skips already-dispositioned customers automatically
+- Cached authentication (saved to `auth_state.json`)
+- LLM-based decision making (Clear → Not Match, Review/Investigate → Match)
+- Keyboard shortcuts: `y`/`n` (decision), `r` (reason), `d` (details), `g`+`c` (navigate)
+
+**Credentials required in `.env`:**
+- `TOGETHER_API_KEY` - Llama 4 API
+- `GOOGLE_LOGIN` - Google email for SSO
+- `GOOGLE_PW` - Google password
+
+### Onboarding New Clients
+
+```bash
+# Generate test from requirements
 python onboard_client.py clients/requirements/new_client.md
 
 # Run generated test
-python test_{client_name}.py
+python clients/{client_id}/test_{client_id}.py
 ```
 
 ## Development Workflow
