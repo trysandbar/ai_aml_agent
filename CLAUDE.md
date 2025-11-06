@@ -62,23 +62,10 @@ Use `storage_state` parameter to cache auth between runs:
 
 ## Essential Patterns
 
-**Dynamic selectors:**
-```python
-selector = await browser.evaluate("""
-    (() => {
-        const selectors = ['#id', '.class', 'input[name="x"]'];
-        for (const sel of selectors) {
-            if (document.querySelector(sel)) return sel;
-        }
-        return null;
-    })()
-""")
-```
-
-**Screenshots with metadata:**
-```python
-await browser.screenshot("step_name", path=Path("./screenshots/step.png"), save_metadata=True)
-# Creates step.png + step.json with URL, timestamp, viewport for AML compliance
-```
+- **Dynamic selectors**: Use `browser.evaluate()` with JavaScript to find selectors that exist
+- **Screenshots with metadata**: Always use `save_metadata=True` for AML compliance
+- **Keyboard shortcuts**: Use `browser.page.keyboard.press()` for single keys, sequences (with delays), and modifiers
+- **Form values**: Set directly with `browser.evaluate()` instead of typing - much faster and more reliable
+- **Reference implementations**: See `test_amazon_real.py` and `clients/[sandbar]/test_[sandbar].py` for working patterns
 
 See [TESTING.md](TESTING.md) for detailed setup and debugging instructions.
