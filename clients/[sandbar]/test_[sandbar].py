@@ -386,7 +386,7 @@ async def main():
                         // Look for span/div elements containing exactly "PEP" text
                         const pepBadges = Array.from(alertsCell.querySelectorAll('span, div')).filter(el => {
                             const txt = el.textContent.trim();
-                            return txt === 'PEP' || txt.match(/^PEP\s+\d+$/);
+                            return txt === 'PEP' || txt.match(/^PEP\\s+\\d+$/);
                         });
                         const hasPEP = pepBadges.length > 0;
 
