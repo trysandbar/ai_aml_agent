@@ -10,7 +10,7 @@ All critical capabilities confirmed:
 - ✅ Security best practices documented (2025-06-18 spec)
 
 ## Vision
-Transform from scripted Playwright workflows → autonomous Llama 4 agent using MCP tools
+Transform from scripted browser automation → autonomous Llama 4 agent using MCP tools
 Similar to Claude Code's agentic behavior: screenshot → reason → act → repeat
 
 **Cost:** Not a concern (user approved)
@@ -25,23 +25,25 @@ User Goal → Agent Loop → Llama 4 (vision + reasoning) → MCP Tool Calls →
 
 ## Components
 
-### 1. MCP Server: Playwright Tools
-**File:** `mcp_servers/playwright_server.py`
+### 1. MCP Server: Puppeteer (Anthropic Official)
+**Package:** `@modelcontextprotocol/server-puppeteer` (v0.6.2+)
+**Runtime:** TypeScript/Node.js (run via npx)
+**Install:** `npx -y @modelcontextprotocol/server-puppeteer`
 
-**Tools to expose:**
-- `playwright_navigate(url: str)` - Navigate to URL
-- `playwright_screenshot(name: str)` - Take screenshot, return base64 + path
-- `playwright_click(selector: str)` - Click element by selector
-- `playwright_fill(selector: str, value: str)` - Fill form field
-- `playwright_evaluate(js_code: str)` - Execute JavaScript, return result
-- `playwright_keyboard_press(key: str)` - Press keyboard key
-- `playwright_get_page_info()` - Extract URL, title, visible text
-- `playwright_wait(seconds: float)` - Wait/sleep
+**Tools available:**
+- `puppeteer_navigate(url: str, launchOptions: object, allowDangerous: bool)` - Navigate to URL
+- `puppeteer_screenshot(name: str, selector: str, width: int, height: int)` - Take screenshot
+- `puppeteer_click(selector: str)` - Click element by selector
+- `puppeteer_fill(selector: str, value: str)` - Fill form field
+- `puppeteer_select(selector: str, value: str)` - Select dropdown option
+- `puppeteer_hover(selector: str)` - Hover over element
+- `puppeteer_evaluate(script: str)` - Execute JavaScript, return result
 
-**State management:**
+**Configuration:**
+- **ALWAYS use headless mode**: Set `launchOptions: {headless: true}` in puppeteer_navigate
 - Persistent browser instance across tool calls
-- Screenshot directory management
-- Session storage (auth_state.json) support
+- Real Chromium browser environment
+- Screenshots accessible at `screenshot://<name>`
 
 ### 2. MCP Integration: Brave Search
 **Setup:** Add Brave Search MCP server to client config
@@ -72,7 +74,8 @@ User Goal → Agent Loop → Llama 4 (vision + reasoning) → MCP Tool Calls →
 - `max_iterations: int = 50` - Safety limit
 - `goal: str` - Natural language goal
 - `client_id: str` - For screenshot dirs, auth state
-- `headless: bool = True` - Browser mode
+
+**Note:** Browser always runs headless (configured via Puppeteer launchOptions)
 
 ### 4. Llama 4 Integration
 **File:** `together_ai/agent_client.py`
@@ -96,16 +99,56 @@ Analyze screenshots, reason about next steps, and use tools to achieve the goal.
 When goal is achieved, explain what was accomplished and stop.
 ```
 
-### 5. Client Interface
+### 5. Client Configuration (Non-Technical)
+**File:** `clients/<client_id>/agent_config.yaml`
+
+**Format - Plain English:**
+```yaml
+website: https://sandbar.example.com
+
+what_to_do: |
+  1. Log in with my username and password
+  2. Go to the alerts dashboard
+  3. Look at 2 customers who have open alerts
+  4. For each customer:
+     - Read their transaction details
+     - Decide if it looks suspicious or normal
+     - If the transaction is over $10,000, escalate it to management
+     - If it involves Iran, North Korea, Syria, or Cuba, flag it
+     - Otherwise approve it
+     - Write down why I made that decision
+     - Submit my decision
+  5. Make sure both decisions were saved
+
+when_finished: |
+  I'm done when I've reviewed exactly 2 customers and all my decisions
+  are submitted and saved in the system.
+
+important_notes:
+  - "Always explain your reasoning"
+  - "Never approve without reading the details first"
+  - "Stop if something seems wrong with the website"
+```
+
+**Design Philosophy:**
+- Natural language instructions (like telling a human)
+- No programming concepts (loops, conditionals, variables)
+- Client-friendly - can be filled out by non-technical users
+- Agent infers logic from context
+
+### 6. Client Interface
 **File:** `agent_client.py`
 
 **Usage:**
 ```python
 from agent_loop import BrowserAgent
+import yaml
+
+config = yaml.safe_load(open("clients/sandbar/agent_config.yaml"))
 
 agent = BrowserAgent(
-    goal="Log into Sandbar, review 2 customers with open alerts, make decisions",
     client_id="sandbar",
+    config=config,
     max_iterations=50
 )
 
@@ -115,11 +158,11 @@ print(result.success, result.steps_taken, result.final_state)
 
 ## Implementation Plan
 
-### Phase 1: MCP Playwright Server (Day 1)
-- [ ] Create mcp_servers/ directory
-- [ ] Implement playwright_server.py with 8 core tools
-- [ ] Test MCP server standalone (stdio transport)
-- [ ] Document tool schemas
+### Phase 1: MCP Puppeteer Setup (Day 1)
+- [ ] Install Puppeteer MCP server: `npx -y @modelcontextprotocol/server-puppeteer`
+- [ ] Test Puppeteer MCP server standalone (stdio transport)
+- [ ] Verify screenshot base64 encoding works
+- [ ] Document available tools from server
 
 ### Phase 2: Agent Loop Core (Day 1-2)
 - [ ] Create agent_loop.py with basic loop structure
@@ -227,7 +270,7 @@ pip install mcp==1.2.1 pillow==11.1.0 together==1.5.29
 python3.13 --version  # Use Python 3.13
 ```
 
-## Research Findings (2025-01-06)
+## Research Findings (2025-11-06)
 
 ### ✅ Together AI Function Calling - CONFIRMED
 - **Supported**: Yes, OpenAI-compatible tool calling format
@@ -241,7 +284,7 @@ python3.13 --version  # Use Python 3.13
 tools = [{
     "type": "function",
     "function": {
-        "name": "playwright_click",
+        "name": "puppeteer_click",
         "description": "Click element by selector",
         "parameters": {
             "type": "object",
@@ -424,7 +467,7 @@ Screenshots accessible at `screenshot://<name>` where `<name>` is specified when
 ### ⚠️ Storage State Authentication
 **Note:** Puppeteer MCP server may need storage state configuration for auth caching
 - Check server documentation for storage state support
-- May require custom implementation or use existing Playwright-style storage
+- May require custom implementation or use browser context storage patterns
 
 ### ✅ Multiple MCP Servers - Official MCP SDK
 **Solution: Official MCP Python SDK (stdio transport)**
