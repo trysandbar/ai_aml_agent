@@ -51,3 +51,4 @@ test_screenshots/
 screenshots/
 *.png
 *.jpg
+*.json
