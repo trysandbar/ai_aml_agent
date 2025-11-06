@@ -447,13 +447,19 @@ async def main():
         # Steps 7-13: Customer review workflow (process 2 customers)
         print("\n📍 Steps 7-13: Customer review workflow")
 
-        for customer_num in range(1, 3):  # Process 2 customers
+        successful_count = 0
+        attempt = 0
+        max_attempts = 20  # Try up to 20 customers to find 2 undispositioned ones
+
+        while successful_count < 2 and attempt < max_attempts:
+            attempt += 1
+            customer_num = successful_count + 1
             print(f"\n{'='*50}")
-            print(f"Customer {customer_num} of 2")
+            print(f"Attempt {attempt}: Looking for customer {customer_num} of 2")
             print('='*50)
 
-            # Step 7: Click a customer (not in top 10, not marked PEP)
-            print(f"\n📍 Step 7 (Customer {customer_num}): Click customer (not top 10, not PEP)")
+            # Step 7: Click a customer (not in top 10, any customer with alerts)
+            print(f"\n📍 Step 7 (Attempt {attempt}): Click customer (not top 10)")
 
             # Find rows without "PEP", skip first 10, click different one each time
             customer_clicked = await browser.evaluate("""
@@ -530,7 +536,8 @@ async def main():
             if customer_clicked:
                 print(f"   ✅ Clicked customer: {customer_clicked}")
             else:
-                print("   ⚠️  No valid customer found (not PEP, past row 10)")
+                print("   ⚠️  No more customers available")
+                break
 
             await asyncio.sleep(3)
             await browser.screenshot(f"step_07_customer_{customer_num}_detail", path=screenshot_dir / f"step_07_customer_{customer_num}_detail.png", full_page=True, save_metadata=True)
@@ -596,6 +603,7 @@ async def main():
                 continue
 
             print(f"   ✅ Customer has no previous decision - proceeding")
+            successful_count += 1
 
             # Step 8: Wait for AI Summary (may or may not appear)
             print(f"\n📍 Step 8 (Customer {customer_num}): Wait for AI Summary (5-7 seconds)")
