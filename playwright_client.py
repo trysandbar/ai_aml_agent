@@ -92,7 +92,7 @@ class PlaywrightClient:
             # Create browser context (isolated session)
             # Use a larger viewport height to ensure full_page screenshots work properly
             context_options = {
-                'viewport': {'width': 1280, 'height': 3000},
+                'viewport': {'width': 1280, 'height': 1500},
                 'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
 
