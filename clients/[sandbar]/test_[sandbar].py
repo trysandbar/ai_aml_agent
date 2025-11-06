@@ -449,13 +449,13 @@ async def main():
 
         successful_count = 0
         attempt = 0
-        max_attempts = 20  # Try up to 20 customers to find 2 undispositioned ones
+        max_attempts = 20  # Try up to 20 customers to find 1 undispositioned one
 
-        while successful_count < 2 and attempt < max_attempts:
+        while successful_count < 1 and attempt < max_attempts:
             attempt += 1
             customer_num = successful_count + 1
             print(f"\n{'='*50}")
-            print(f"Attempt {attempt}: Looking for customer {customer_num} of 2")
+            print(f"Attempt {attempt}: Looking for customer {customer_num} of 1")
             print('='*50)
 
             # Step 7: Click a customer (not in top 10, any customer with alerts)
@@ -591,9 +591,14 @@ async def main():
                 })()
             """)
 
-            prompt = f"""You are reviewing a customer for AML (Anti-Money Laundering) verification.
+            prompt = f"""Look at the page content and find the badge next to "AI Summary".
 
-Read the following page content and determine if this person is a MATCH or NOT A MATCH for potential sanctions/PEP concerns.
+The badge will say one of: Clear, Review, or Investigate
+
+RULES:
+- If badge says "Clear" → respond NOTMATCH
+- If badge says "Review" → respond MATCH
+- If badge says "Investigate" → respond MATCH
 
 Page content:
 {page_content[:3000]}
@@ -626,7 +631,8 @@ Respond with ONLY one word: MATCH or NOTMATCH"""
             await asyncio.sleep(1)
             await browser.screenshot(f"step_10a_customer_{customer_num}_decision_visible", path=screenshot_dir / f"step_10a_customer_{customer_num}_decision_visible.png", full_page=True, save_metadata=True)
 
-            # Step 10a: Press 'y' or 'n' (lowercase)
+            # Step 10a: Press 'y' for match or 'n' for no match
+            # Sandbar UI: 'y' = Match (Review/Investigate), 'n' = No Match (Clear)
             decision_key = 'y' if is_match else 'n'
             await browser.page.keyboard.press(decision_key)
             print(f"   ✅ Pressed '{decision_key}' ({'Match' if is_match else 'Not Match'})")
@@ -670,7 +676,7 @@ Respond with ONLY the number (1, 2, 3, or 4)."""
             # Step 10d: Press 'r' to specify reasoning
             await browser.page.keyboard.press('r')
             print(f"   ✅ Pressed 'r' (Specify match reason)")
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)  # Wait longer for popup to fully render and focus
             await browser.screenshot(f"step_10d_customer_{customer_num}_after_r", path=screenshot_dir / f"step_10d_customer_{customer_num}_after_r.png", full_page=True, save_metadata=True)
 
             # Generate reasoning using LLM
@@ -701,7 +707,7 @@ Provide ONLY the reasoning text (1-2 sentences), no other commentary."""
             # Step 10f: Press 'd' to add details
             await browser.page.keyboard.press('d')
             print(f"   ✅ Pressed 'd' (Add details)")
-            await asyncio.sleep(1)
+            await asyncio.sleep(3)  # Wait longer for popup and auto-focus
             await browser.screenshot(f"step_10f_customer_{customer_num}_after_d", path=screenshot_dir / f"step_10f_customer_{customer_num}_after_d.png", full_page=True, save_metadata=True)
 
             # Generate details using LLM
