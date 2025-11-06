@@ -1,0 +1,16 @@
+{
+  "screenshot_name": "05_added_to_cart",
+  "screenshot_path": "test_screenshots/amazon_real/05_added_to_cart.png",
+  "screenshot_size_bytes": 333717,
+  "url": "https://www.amazon.com/s?k=mechanical+keyboard&crid=168NQTIV1RG9B&sprefix=mechanical+keyboard%2Caps%2C117&ref=nb_sb_noss_1",
+  "page_title": "Amazon.com : mechanical keyboard",
+  "timestamp": "2025-11-06T04:42:06.414301+00:00",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "full_page": false,
+  "selector": null,
+  "browser": "chromium",
+  "headless": true
+}

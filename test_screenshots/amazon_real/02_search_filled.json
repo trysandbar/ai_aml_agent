@@ -1,0 +1,16 @@
+{
+  "screenshot_name": "02_search_filled",
+  "screenshot_path": "test_screenshots/amazon_real/02_search_filled.png",
+  "screenshot_size_bytes": 858462,
+  "url": "https://www.amazon.com/",
+  "page_title": "Amazon.com. Spend less. Smile more.",
+  "timestamp": "2025-11-06T04:41:55.847909+00:00",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "full_page": false,
+  "selector": null,
+  "browser": "chromium",
+  "headless": true
+}
