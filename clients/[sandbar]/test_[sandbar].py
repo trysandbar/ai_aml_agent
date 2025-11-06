@@ -570,6 +570,38 @@ async def main():
             """)
             print(f"   👤 Customer name: {customer_name}")
 
+            # Check if customer already has a disposition
+            disposition = await browser.evaluate("""
+                (() => {
+                    // Look for Disposition field in the Properties section
+                    const elements = Array.from(document.querySelectorAll('*'));
+                    for (let i = 0; i < elements.length; i++) {
+                        const el = elements[i];
+                        if (el.textContent.trim() === 'Disposition') {
+                            // Next element should have the disposition value
+                            const parent = el.parentElement;
+                            if (parent) {
+                                const textContent = parent.textContent;
+                                if (textContent.includes('Unknown')) return 'Unknown';
+                                // Check for other disposition values
+                                return textContent.replace('Disposition', '').trim();
+                            }
+                        }
+                    }
+                    return 'Unknown';
+                })()
+            """)
+            print(f"   📋 Disposition: {disposition}")
+
+            if disposition != 'Unknown':
+                print(f"   ⚠️  Customer already has disposition: {disposition} - skipping")
+                # Go back to list and try next customer
+                await browser.page.keyboard.press('g')
+                await asyncio.sleep(0.2)
+                await browser.page.keyboard.press('c')
+                await asyncio.sleep(3)
+                continue
+
             # Step 8: Wait for AI Summary (may or may not appear)
             print(f"\n📍 Step 8 (Customer {customer_num}): Wait for AI Summary (5-7 seconds)")
             await asyncio.sleep(7)
@@ -603,7 +635,14 @@ Respond with ONLY one word: MATCH or NOTMATCH"""
             )
 
             decision = response.choices[0].message.content.strip().upper()
-            is_match = 'MATCH' in decision
+            # Check for NOTMATCH first, then MATCH
+            if 'NOT' in decision or 'NO' in decision:
+                is_match = False
+            elif 'MATCH' in decision or 'YES' in decision:
+                is_match = True
+            else:
+                # Default to not match if unclear
+                is_match = False
             print(f"   🤖 LLM Decision: {decision} ({'Y' if is_match else 'N'})")
 
             # Step 10: Decision the person using keyboard shortcuts
