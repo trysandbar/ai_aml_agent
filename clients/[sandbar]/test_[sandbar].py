@@ -458,17 +458,17 @@ async def main():
             print(f"Attempt {attempt}: Looking for customer {customer_num} of 1")
             print('='*50)
 
-            # Step 7: Click a customer (not in top 10, any customer with alerts)
-            print(f"\n📍 Step 7 (Attempt {attempt}): Click customer (not top 10)")
+            # Step 7: Click a customer
+            print(f"\n📍 Step 7 (Attempt {attempt}): Click customer")
 
-            # Find any customer past row 10, click different one each time
+            # Find any customer, click different one each time
             customer_clicked = await browser.evaluate("""
                 ((attemptNum) => {
                     // Get all rows
                     const rows = Array.from(document.querySelectorAll('tbody tr'));
 
-                    // Skip first 10, then click based on attempt number
-                    const targetIndex = 10 + attemptNum - 1;
+                    // Click based on attempt number (starting from row 0)
+                    const targetIndex = attemptNum - 1;
 
                     if (targetIndex >= rows.length) return null;
 
