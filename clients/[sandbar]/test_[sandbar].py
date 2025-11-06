@@ -570,37 +570,32 @@ async def main():
             """)
             print(f"   👤 Customer name: {customer_name}")
 
-            # Check if customer already has a disposition
-            disposition = await browser.evaluate("""
+            # Check if customer already has a decision marked (look for "marked as" comment)
+            has_decision = await browser.evaluate("""
                 (() => {
-                    // Look for Disposition field in the Properties section
-                    const elements = Array.from(document.querySelectorAll('*'));
-                    for (let i = 0; i < elements.length; i++) {
-                        const el = elements[i];
-                        if (el.textContent.trim() === 'Disposition') {
-                            // Next element should have the disposition value
-                            const parent = el.parentElement;
-                            if (parent) {
-                                const textContent = parent.textContent;
-                                if (textContent.includes('Unknown')) return 'Unknown';
-                                // Check for other disposition values
-                                return textContent.replace('Disposition', '').trim();
-                            }
-                        }
+                    // Look for "marked as" text which indicates a previous decision
+                    const allText = document.body.textContent;
+                    if (allText.includes('marked as MATCH') ||
+                        allText.includes('marked as NO_MATCH') ||
+                        allText.includes('marked as NOT_MATCH') ||
+                        allText.includes('marked as FALSE_POSITIVE') ||
+                        allText.includes('marked as TRUE_POSITIVE')) {
+                        return true;
                     }
-                    return 'Unknown';
+                    return false;
                 })()
             """)
-            print(f"   📋 Disposition: {disposition}")
 
-            if disposition != 'Unknown':
-                print(f"   ⚠️  Customer already has disposition: {disposition} - skipping")
+            if (has_decision):
+                print(f"   ⚠️  Customer already has a decision - skipping")
                 # Go back to list and try next customer
                 await browser.page.keyboard.press('g')
                 await asyncio.sleep(0.2)
                 await browser.page.keyboard.press('c')
                 await asyncio.sleep(3)
                 continue
+
+            print(f"   ✅ Customer has no previous decision - proceeding")
 
             # Step 8: Wait for AI Summary (may or may not appear)
             print(f"\n📍 Step 8 (Customer {customer_num}): Wait for AI Summary (5-7 seconds)")
