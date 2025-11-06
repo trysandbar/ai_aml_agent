@@ -461,77 +461,47 @@ async def main():
             # Step 7: Click a customer (not in top 10, any customer with alerts)
             print(f"\n📍 Step 7 (Attempt {attempt}): Click customer (not top 10)")
 
-            # Find rows without "PEP", skip first 10, click different one each time
+            # Find any customer past row 10, click different one each time
             customer_clicked = await browser.evaluate("""
-                ((customerNum) => {
-                    // Find the Alerts column index (same logic as PEP detection)
-                    const headers = Array.from(document.querySelectorAll('thead th, thead td'));
-                    let alertsColumnIndex = -1;
+                ((attemptNum) => {
+                    // Get all rows
+                    const rows = Array.from(document.querySelectorAll('tbody tr'));
 
+                    // Skip first 10, then click based on attempt number
+                    const targetIndex = 10 + attemptNum - 1;
+
+                    if (targetIndex >= rows.length) return null;
+
+                    const row = rows[targetIndex];
+                    const cells = Array.from(row.querySelectorAll('td'));
+
+                    if (cells.length === 0) return null;
+
+                    const nameCell = cells[0];
+                    const customerName = nameCell.textContent.trim();
+
+                    // Find alerts column
+                    const headers = Array.from(document.querySelectorAll('thead th, thead td'));
+                    let alertsColIndex = -1;
                     for (let i = 0; i < headers.length; i++) {
-                        const headerText = headers[i].textContent.trim().toLowerCase();
-                        if (headerText === 'alerts') {
-                            alertsColumnIndex = i;
+                        if (headers[i].textContent.toLowerCase().includes('alert')) {
+                            alertsColIndex = i;
                             break;
                         }
                     }
 
-                    if (alertsColumnIndex === -1) {
-                        return null;
+                    let alertsText = '';
+                    if (alertsColIndex >= 0 && cells.length > alertsColIndex) {
+                        alertsText = cells[alertsColIndex].textContent.trim();
                     }
 
-                    const rows = Array.from(document.querySelectorAll('tbody tr'));
-                    let nonPepRows = [];
-
-                    // Find all rows without PEP badge
-                    for (let i = 0; i < rows.length; i++) {
-                        const row = rows[i];
-                        const cells = row.querySelectorAll('td');
-                        if (cells.length <= alertsColumnIndex) continue;
-
-                        const nameCell = cells[0];
-                        const name = nameCell.textContent.trim();
-
-                        const alertsCell = cells[alertsColumnIndex];
-
-                        // Look for span/div elements containing exactly "PEP" text
-                        const pepBadges = Array.from(alertsCell.querySelectorAll('span, div')).filter(el => {
-                            const txt = el.textContent.trim();
-                            return txt === 'PEP' || txt.match(/^PEP\s+\d+$/);
-                        });
-                        const hasPEP = pepBadges.length > 0;
-
-                        const alertsText = alertsCell.textContent || '';
-
-                        // Skip if has PEP badge
-                        if (hasPEP) continue;
-
-                        // Valid non-PEP row
-                        nonPepRows.push({
-                            row: row,
-                            index: i,
-                            name: name,
-                            alerts: alertsText.substring(0, 30)
-                        });
-                    }
-
-                    // Filter to rows past index 10
-                    let targetRows = nonPepRows.filter(r => r.index >= 10);
-
-                    // If none past 10, use all non-PEP rows
-                    if (targetRows.length === 0) {
-                        targetRows = nonPepRows;
-                    }
-
-                    // Click the appropriate one (0-indexed)
-                    if (targetRows.length >= customerNum) {
-                        const target = targetRows[customerNum - 1];
-                        target.row.click();
-                        return target.name + ' (row ' + target.index + ', alerts: ' + target.alerts + ')';
-                    }
-
-                    return null;
-                })(""" + str(customer_num) + ")")
+                    row.click();
+                    return {
+                        name: customerName,
+                        alerts: alertsText,
+                        row: targetIndex + 1
+                    };
+                })(""" + str(attempt) + ")")
 
             if customer_clicked:
                 print(f"   ✅ Clicked customer: {customer_clicked}")
