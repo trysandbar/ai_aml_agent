@@ -45,7 +45,9 @@ Thumbs.db
 # Logs
 *.log
 
-# Screenshots from browser automation
+# Screenshots and audit data (S3-ready structure)
+ai_agent_audit/
+test_screenshots/
 screenshots/
 *.png
 *.jpg
