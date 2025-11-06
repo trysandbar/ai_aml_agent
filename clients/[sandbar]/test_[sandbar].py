@@ -613,14 +613,14 @@ Respond with ONLY one word: MATCH or NOTMATCH"""
             # Scroll to bottom to see Decision section
             await browser.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
             await asyncio.sleep(1)
-            await browser.screenshot(f"step_10a_customer_{customer_num}_decision_visible", path=screenshot_dir / f"step_10a_customer_{customer_num}_decision_visible.png", save_metadata=True)
+            await browser.screenshot(f"step_10a_customer_{customer_num}_decision_visible", path=screenshot_dir / f"step_10a_customer_{customer_num}_decision_visible.png", full_page=True, save_metadata=True)
 
             # Step 10a: Press 'y' or 'n' (lowercase)
             decision_key = 'y' if is_match else 'n'
             await browser.page.keyboard.press(decision_key)
             print(f"   ✅ Pressed '{decision_key}' ({'Match' if is_match else 'Not Match'})")
             await asyncio.sleep(2)
-            await browser.screenshot(f"step_10b_customer_{customer_num}_after_yn", path=screenshot_dir / f"step_10b_customer_{customer_num}_after_yn.png", save_metadata=True)
+            await browser.screenshot(f"step_10b_customer_{customer_num}_after_yn", path=screenshot_dir / f"step_10b_customer_{customer_num}_after_yn.png", full_page=True, save_metadata=True)
 
             # Step 10b: Select match reason (1=Name, 2=Address, 3=Date, 4=Other)
             # Use LLM to decide which reason based on page content
@@ -654,13 +654,13 @@ Respond with ONLY the number (1, 2, 3, or 4)."""
 
             await browser.page.keyboard.press(reason_digit)
             await asyncio.sleep(1)
-            await browser.screenshot(f"step_10c_customer_{customer_num}_reason_selected", path=screenshot_dir / f"step_10c_customer_{customer_num}_reason_selected.png", save_metadata=True)
+            await browser.screenshot(f"step_10c_customer_{customer_num}_reason_selected", path=screenshot_dir / f"step_10c_customer_{customer_num}_reason_selected.png", full_page=True, save_metadata=True)
 
             # Step 10d: Press 'r' to specify reasoning
             await browser.page.keyboard.press('r')
             print(f"   ✅ Pressed 'r' (Specify match reason)")
             await asyncio.sleep(1)
-            await browser.screenshot(f"step_10d_customer_{customer_num}_after_r", path=screenshot_dir / f"step_10d_customer_{customer_num}_after_r.png", save_metadata=True)
+            await browser.screenshot(f"step_10d_customer_{customer_num}_after_r", path=screenshot_dir / f"step_10d_customer_{customer_num}_after_r.png", full_page=True, save_metadata=True)
 
             # Generate reasoning using LLM
             reasoning_prompt = f"""Based on this AML customer profile, provide a brief 1-2 sentence reasoning for why this is a {'match' if is_match else 'not a match'}:
@@ -685,13 +685,13 @@ Provide ONLY the reasoning text (1-2 sentences), no other commentary."""
             # Type the reasoning
             await browser.page.keyboard.type(reasoning)
             await asyncio.sleep(1)
-            await browser.screenshot(f"step_10e_customer_{customer_num}_reasoning_entered", path=screenshot_dir / f"step_10e_customer_{customer_num}_reasoning_entered.png", save_metadata=True)
+            await browser.screenshot(f"step_10e_customer_{customer_num}_reasoning_entered", path=screenshot_dir / f"step_10e_customer_{customer_num}_reasoning_entered.png", full_page=True, save_metadata=True)
 
             # Step 10f: Press 'd' to add details
             await browser.page.keyboard.press('d')
             print(f"   ✅ Pressed 'd' (Add details)")
             await asyncio.sleep(1)
-            await browser.screenshot(f"step_10f_customer_{customer_num}_after_d", path=screenshot_dir / f"step_10f_customer_{customer_num}_after_d.png", save_metadata=True)
+            await browser.screenshot(f"step_10f_customer_{customer_num}_after_d", path=screenshot_dir / f"step_10f_customer_{customer_num}_after_d.png", full_page=True, save_metadata=True)
 
             # Generate details using LLM
             details_prompt = f"""Based on this AML alert, provide specific details about the matching factors or discrepancies (2-3 sentences):
@@ -716,14 +716,14 @@ Provide ONLY the details text (2-3 sentences), no other commentary."""
             # Type the details
             await browser.page.keyboard.type(details)
             await asyncio.sleep(1)
-            await browser.screenshot(f"step_10g_customer_{customer_num}_details_entered", path=screenshot_dir / f"step_10g_customer_{customer_num}_details_entered.png", save_metadata=True)
+            await browser.screenshot(f"step_10g_customer_{customer_num}_details_entered", path=screenshot_dir / f"step_10g_customer_{customer_num}_details_entered.png", full_page=True, save_metadata=True)
 
             # Step 10h: Press Command+Enter to submit
             await browser.page.keyboard.press('Meta+Enter')
             print(f"   ✅ Pressed Command+Enter to submit decision")
             await asyncio.sleep(3)
 
-            await browser.screenshot(f"step_10h_customer_{customer_num}_decision_submitted", path=screenshot_dir / f"step_10h_customer_{customer_num}_decision_submitted.png", save_metadata=True)
+            await browser.screenshot(f"step_10h_customer_{customer_num}_decision_submitted", path=screenshot_dir / f"step_10h_customer_{customer_num}_decision_submitted.png", full_page=True, save_metadata=True)
 
             # Step 11: Return to customers page
             print(f"\n📍 Step 11 (Customer {customer_num}): Return to customers page")
