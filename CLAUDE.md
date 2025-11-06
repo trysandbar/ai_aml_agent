@@ -7,7 +7,7 @@ AI AML Agent - Browser automation for AML verification workflows using Playwrigh
 - **venv location**: `./venv` (activate with `source venv/bin/activate`)
 - **Dependencies**: `pip install -r requirements.txt && playwright install chromium`
 - **Secrets**: `.env` file with `TOGETHER_API_KEY` (use `direnv allow` for auto-load)
-- **Python 3.14**: Set `PYTHON_JIT=1` for JIT performance boost
+- **Python 3.13**: Python version for this project
 
 ## Project Structure
 
@@ -47,7 +47,7 @@ When debugging a client:
 
 **ALWAYS web search for:**
 - Playwright API syntax and best practices
-- Python 3.14 features and syntax
+- Python 3.13 features and syntax
 - Any API or library you're uncertain about
 - Security best practices
 
