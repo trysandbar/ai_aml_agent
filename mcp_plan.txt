@@ -1,0 +1,477 @@
+# MCP Agent Plan - Llama 4 Agentic Browser Automation
+
+## Status: ✅ READY TO BUILD (Research Complete - 2025-01-06)
+
+All critical capabilities confirmed:
+- ✅ Together AI supports OpenAI-compatible function calling
+- ✅ Llama 4 Maverick has native multimodal vision (beats GPT-4o)
+- ✅ MCP Python SDK 1.2.1 available with full spec support
+- ✅ Brave Search MCP server ready to use
+- ✅ Security best practices documented (2025-06-18 spec)
+
+## Vision
+Transform from scripted Playwright workflows → autonomous Llama 4 agent using MCP tools
+Similar to Claude Code's agentic behavior: screenshot → reason → act → repeat
+
+**Cost:** Not a concern (user approved)
+
+## Architecture
+
+```
+User Goal → Agent Loop → Llama 4 (vision + reasoning) → MCP Tool Calls → Execute
+              ↑                                                              ↓
+              └──────────────────── Screenshot + State ─────────────────────┘
+```
+
+## Components
+
+### 1. MCP Server: Playwright Tools
+**File:** `mcp_servers/playwright_server.py`
+
+**Tools to expose:**
+- `playwright_navigate(url: str)` - Navigate to URL
+- `playwright_screenshot(name: str)` - Take screenshot, return base64 + path
+- `playwright_click(selector: str)` - Click element by selector
+- `playwright_fill(selector: str, value: str)` - Fill form field
+- `playwright_evaluate(js_code: str)` - Execute JavaScript, return result
+- `playwright_keyboard_press(key: str)` - Press keyboard key
+- `playwright_get_page_info()` - Extract URL, title, visible text
+- `playwright_wait(seconds: float)` - Wait/sleep
+
+**State management:**
+- Persistent browser instance across tool calls
+- Screenshot directory management
+- Session storage (auth_state.json) support
+
+### 2. MCP Integration: Brave Search
+**Setup:** Add Brave Search MCP server to client config
+
+**Tools available:**
+- `brave_web_search(query: str)` - Web search for information
+- Use for: researching selectors, understanding UI patterns, troubleshooting
+
+**API Key:** User will provide BRAVE_API_KEY in .env
+
+### 3. Agent Loop
+**File:** `agent_loop.py`
+
+**Flow:**
+1. Initialize: Load goal, start browser, connect MCP servers
+2. Loop:
+   a. Take screenshot (with vision encoding)
+   b. Get page state (URL, title, visible text)
+   c. Build context: [goal, history, current_state, screenshot]
+   d. Call Llama 4 with tools enabled
+   e. Parse tool calls from response
+   f. Execute MCP tools
+   g. Check if goal achieved
+   h. Repeat or exit
+3. Cleanup: Save state, close browser
+
+**Parameters:**
+- `max_iterations: int = 50` - Safety limit
+- `goal: str` - Natural language goal
+- `client_id: str` - For screenshot dirs, auth state
+- `headless: bool = True` - Browser mode
+
+### 4. Llama 4 Integration
+**File:** `together_ai/agent_client.py`
+
+**Model:** meta-llama/Llama-Vision-Free (or latest vision model)
+
+**Features needed:**
+- Tool/function calling support
+- Vision input (screenshots)
+- System prompt for agentic behavior
+- Conversation history management
+
+**System Prompt Structure:**
+```
+You are an autonomous browser automation agent.
+Goal: {goal}
+
+You have access to browser control tools (navigate, click, fill, etc) and web search.
+Analyze screenshots, reason about next steps, and use tools to achieve the goal.
+
+When goal is achieved, explain what was accomplished and stop.
+```
+
+### 5. Client Interface
+**File:** `agent_client.py`
+
+**Usage:**
+```python
+from agent_loop import BrowserAgent
+
+agent = BrowserAgent(
+    goal="Log into Sandbar, review 2 customers with open alerts, make decisions",
+    client_id="sandbar",
+    max_iterations=50
+)
+
+result = agent.run()
+print(result.success, result.steps_taken, result.final_state)
+```
+
+## Implementation Plan
+
+### Phase 1: MCP Playwright Server (Day 1)
+- [ ] Create mcp_servers/ directory
+- [ ] Implement playwright_server.py with 8 core tools
+- [ ] Test MCP server standalone (stdio transport)
+- [ ] Document tool schemas
+
+### Phase 2: Agent Loop Core (Day 1-2)
+- [ ] Create agent_loop.py with basic loop structure
+- [ ] Integrate TogetherAI with tool calling
+- [ ] Implement screenshot → base64 encoding for vision
+- [ ] Build context manager (history, state)
+- [ ] Add safety limits (max iterations, timeouts)
+
+### Phase 3: Brave Search Integration (Day 2)
+- [ ] Add Brave MCP server to config
+- [ ] Test web search from agent
+- [ ] Add search examples to system prompt
+
+### Phase 4: Testing & Refinement (Day 2-3)
+- [ ] Test on Amazon example (simple goal)
+- [ ] Test on Sandbar (complex auth + decisions)
+- [ ] Compare performance vs scripted approach
+- [ ] Tune prompts, iteration limits
+- [ ] Add error recovery patterns
+
+### Phase 5: Client Migration (Day 3+)
+- [ ] Update onboard_client.py to generate agent-based clients
+- [ ] Migrate existing clients (optional)
+- [ ] Document agent patterns in CLAUDE.md
+- [ ] Add agent examples to ONBOARDING.md
+
+## Key Decisions
+
+### Tool Granularity
+**Decision:** Expose low-level tools (click, fill, evaluate)
+**Rationale:**
+- LLM can compose complex actions
+- Flexibility for unforeseen workflows
+- Mirrors Claude Code's approach
+
+### Vision vs Text State
+**Decision:** Use both - screenshots for visual reasoning, text for context
+**Rationale:**
+- Vision shows UI state, layout, visual elements
+- Text provides URL, page content for search/reasoning
+- Together = comprehensive understanding
+
+### Error Handling
+**Decision:** LLM-driven recovery with retry budget
+**Rationale:**
+- LLM can reason about errors and try different approaches
+- Set retry limits to prevent infinite loops
+- Log failures for debugging
+
+### Auth Caching
+**Decision:** Keep storage_state pattern, add as tool parameter
+**Rationale:**
+- Auth is expensive (2FA, etc)
+- Agent can decide when to use cached vs fresh login
+- Backward compatible with existing pattern
+
+## Success Metrics
+
+**Agent should be able to:**
+1. Navigate unfamiliar websites without pre-scripted steps
+2. Adapt to UI changes (selectors, layouts)
+3. Search for help when stuck (Brave search)
+4. Complete Sandbar workflow end-to-end autonomously
+5. Match or exceed scripted performance (success rate, time)
+
+## Files to Create
+
+```
+together_ai/
+  agent_client.py            - Llama 4 with tool calling + vision
+
+mcp_config.json              - MCP servers config (Puppeteer + Brave)
+agent_loop.py                - Main agent loop using official MCP SDK
+agent_client.py              - User-facing client interface
+
+tests/
+  test_agent_amazon.py       - Simple navigation test
+  test_agent_sandbar.py      - Complex workflow test
+```
+
+**Note:** Using Anthropic's @modelcontextprotocol/server-puppeteer (TypeScript) via official MCP SDK
+
+## Dependencies
+
+**New packages (PINNED VERSIONS):**
+- `mcp==1.2.1` - Official MCP SDK (Oct 30, 2025)
+- `pillow==11.1.0` - Image encoding for vision (compatible with together==1.5.29)
+- `together==1.5.29` - Together AI Python client (latest Nov 2025)
+
+**Add to requirements.txt:**
+```
+mcp==1.2.1
+pillow==11.1.0
+together==1.5.29
+```
+
+**Installation:**
+```bash
+source venv/bin/activate
+pip install mcp==1.2.1 pillow==11.1.0 together==1.5.29
+```
+
+**Python Version:**
+```bash
+python3.13 --version  # Use Python 3.13
+```
+
+## Research Findings (2025-01-06)
+
+### ✅ Together AI Function Calling - CONFIRMED
+- **Supported**: Yes, OpenAI-compatible tool calling format
+- **Syntax**: Pass `tools` array with function definitions
+- **Response**: Returns `tool_calls` array with function names + arguments
+- **Format**: Standard JSON schema (type, properties, required)
+- **Multi-turn**: Supports conversation with tool results
+
+**Example Code:**
+```python
+tools = [{
+    "type": "function",
+    "function": {
+        "name": "playwright_click",
+        "description": "Click element by selector",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "selector": {"type": "string", "description": "CSS selector"}
+            },
+            "required": ["selector"]
+        }
+    }
+}]
+
+response = client.chat.completions.create(
+    model="meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+    messages=[...],
+    tools=tools
+)
+```
+
+### ✅ Llama 4 Maverick Multimodal - CONFIRMED
+- **Model**: `meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8`
+- **Vision**: Native multimodal with early fusion (not bolted-on)
+- **Capabilities**:
+  - Joint text + vision understanding
+  - Multi-image reasoning
+  - Image grounding (align text to visual regions)
+  - 12 languages support
+- **Context**: 500K tokens (1M coming soon per Together AI)
+- **Performance**: Beats GPT-4o and Gemini 2.0 Flash on benchmarks
+- **Together AI**: Day 1 launch partner, full support
+
+### ✅ MCP Python SDK - CONFIRMED
+- **Version**: 1.2.1 (latest as of 2025)
+- **Spec**: 2025-06-18 revision
+- **Package**: `pip install mcp` or use `uv`
+- **Features**:
+  - Full MCP specification implementation
+  - stdio, SSE, Streamable HTTP transports
+  - FastMCP API included
+  - OpenAI adopted MCP in March 2025
+
+### ✅ Brave Search MCP - READY TO USE
+- **Package**: `@arben-adm/brave-mcp-search` or `mikechao/brave-search-mcp`
+- **Tools**: `brave_web_search`, `brave_local_search`
+- **Setup**: Requires `BRAVE_API_KEY` environment variable
+- **Install**: `npx -y @smithery/cli install @arben-adm/brave-mcp-search --client claude`
+- **Alternative**: Clone repo, use `uv` to install dependencies
+
+### 🔒 Security Best Practices (MCP Spec 2025-06-18)
+1. **Authentication**: OAuth 2.1 mandatory for HTTP transports (March 2025 update)
+2. **Secrets**: Never echo secrets in tool results or messages
+3. **Input Validation**:
+   - Validate all inputs
+   - Sanitize outputs
+   - Guard against SQL injection, path traversal, prompt injection
+4. **Sandboxing**: Run MCP servers in sandboxed environments (containers recommended)
+5. **Token Handling**:
+   - NEVER use token passthrough anti-pattern
+   - Validate tokens issued to MCP server only
+   - Avoid "confused deputy" vulnerabilities
+6. **Code Security**:
+   - Run SAST tools on MCP code
+   - Software composition analysis on dependencies
+   - Block builds on high-severity issues
+7. **Stdio Transport**: Safest for local development (no network exposure)
+
+## Confirmed Architecture
+
+```
+User Goal → Agent Loop → Llama 4 Maverick (vision) → Tool Calls → Official MCP SDK → MCP Servers
+              ↑                                                                            ↓
+              └─────────── Screenshot (base64) + Tool Results ───────────────────────────┘
+                                                                                           ↓
+                                                                     [@modelcontextprotocol/server-puppeteer]
+                                                                     [Brave Search MCP]
+```
+
+## Updated Implementation Details
+
+### 1. Together AI Integration
+**File:** `together_ai/agent_client.py`
+
+```python
+from together import Together
+
+client = Together(api_key=os.environ["TOGETHER_API_KEY"])
+
+# Convert screenshot to base64
+with open(screenshot_path, "rb") as f:
+    image_b64 = base64.b64encode(f.read()).decode()
+
+response = client.chat.completions.create(
+    model="meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+    messages=[
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": [
+            {"type": "text", "text": "What should I do next?"},
+            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_b64}"}}
+        ]}
+    ],
+    tools=mcp_tools,
+    max_tokens=2000
+)
+
+# Parse tool calls
+if response.choices[0].message.tool_calls:
+    for tool_call in response.choices[0].message.tool_calls:
+        function_name = tool_call.function.name
+        arguments = json.loads(tool_call.function.arguments)
+        # Execute via MCP
+```
+
+### 2. MCP Puppeteer Server - Anthropic Official
+
+**Package**: `@modelcontextprotocol/server-puppeteer` (v0.6.2)
+**Runtime**: TypeScript/Node.js (run via npx)
+**Install**: `npx -y @modelcontextprotocol/server-puppeteer`
+
+**Features:**
+- Browser automation with screenshot support
+- Base64-encoded screenshots (via `encoded: true` parameter)
+- JavaScript execution in browser
+- Real browser environment
+
+**Tools Available:**
+- Browser control: navigate, click, fill forms
+- Screenshot: Take screenshots with base64 encoding
+- JavaScript: Execute arbitrary JavaScript
+- Page interaction: Full DOM manipulation
+
+**Setup:**
+```bash
+# Run via npx (no install needed)
+npx -y @modelcontextprotocol/server-puppeteer
+```
+
+**Screenshot Access:**
+Screenshots accessible at `screenshot://<name>` where `<name>` is specified when capturing
+
+### 3. Brave Search Integration
+**Option 1**: Use existing `@arben-adm/brave-mcp-search` (Python available)
+**Option 2**: Integrate directly (simpler for single-process agent)
+
+## Updated Success Metrics
+
+1. **Autonomy**: Complete Sandbar workflow with zero pre-scripting
+2. **Adaptability**: Handle UI changes without code updates
+3. **Intelligence**: Search for help when stuck (Brave)
+4. **Performance**: Match scripted workflow success rate
+5. **Vision Quality**: Accurately interpret UI state from screenshots
+
+## Critical Findings & Limitations
+
+### ✅ Image Context Management - PRODUCTION DIMENSIONS
+- **Actual viewport: 1280x1500 pixels** (from playwright_client.py line 95)
+- **Full-page screenshots used**: Capture entire page height (often taller than viewport)
+- **Token usage per image**:
+  - 1280x1500 viewport: ~3,045 tokens
+  - Full-page (tall pages): up to 6,000+ tokens
+  - Calculation: Image divided into 336×336 tiles, ~145 tokens/tile
+- **Context strategy**: Keep only last 10 screenshots in LLM context
+- **10 screenshots = ~30K-60K tokens** (leaves 440K-470K for conversation/tools)
+- **All screenshots saved to disk** with metadata JSON (existing pattern)
+- **Agent references past actions via text summaries**, not re-sending images
+- **Similar to Claude Code**: Recent context + text history, not all images
+
+### ✅ Tool Calling with Retry Logic (Agentic Pattern)
+1. **Together AI handles parsing**: OpenAI-compatible API, no special parser needed
+2. **Format errors**: Model can occasionally fail to emit tool calls correctly
+3. **Solution**: Standard retry logic (same as Claude Code)
+4. **Retry strategy**:
+   - No tool calls detected → retry with "please use tools" hint
+   - Malformed JSON → retry with format correction
+   - Max 3 retries per action
+   - Log failures for debugging
+5. **Capabilities**:
+   - 128 functions per call (more than sufficient)
+   - Parallel tool calls supported (Llama 4 advantage)
+   - Text-only OR tool calls (not both simultaneously)
+
+### ⚠️ Storage State Authentication
+**Note:** Puppeteer MCP server may need storage state configuration for auth caching
+- Check server documentation for storage state support
+- May require custom implementation or use existing Playwright-style storage
+
+### ✅ Multiple MCP Servers - Official MCP SDK
+**Solution: Official MCP Python SDK (stdio transport)**
+
+- `pip install mcp==1.2.1`
+- Official implementation from modelcontextprotocol
+- Connect to multiple servers via stdio transport
+- JSON-RPC 2.0 protocol for cross-language compatibility
+- **Why official SDK**: Production-ready, well-documented, stable
+
+### ✅ Cross-Language Communication
+- **Confirmed**: Python MCP client ↔ TypeScript MCP server works via stdio
+- **Protocol**: JSON-RPC 2.0 ensures language-agnostic communication
+
+### ✅ Schema Translation
+- **MCP → OpenAI format**: Automatic in most SDKs
+- **Format**: `{"type": "function", "function": tool}`
+- **Strict mode**: Used when possible for better reliability
+
+## Updated Implementation Strategy
+
+**Phase 1a: Single Server Proof of Concept**
+- Start with Puppeteer MCP only: `npx -y @modelcontextprotocol/server-puppeteer`
+- Test tool calling + vision loop with Llama 4 Maverick
+- Validate screenshot capture and base64 encoding
+- Implement robust retry logic for tool calling errors
+
+**Phase 1b: Add Multi-Server Support**
+- Install official MCP SDK: `pip install mcp==1.2.1`
+- Configure Puppeteer + Brave Search servers via stdio transport
+- Connect agent to both servers using MCP SDK client
+- Test combined browsing + search workflow
+
+**Phase 2: Production Hardening**
+- Add fallback to accessibility tree when vision fails
+- Handle tool call format errors gracefully
+- Add storage state auth caching
+- Validate full-page screenshot handling with 1280x1500+ dimensions
+
+## Next Steps
+
+1. ✅ Research complete - all limitations identified and addressed
+2. ✅ Architecture finalized - Official MCP SDK + Puppeteer MCP + Llama 4 Maverick
+3. Install pinned dependencies: `pip install mcp==1.2.1 pillow==12.0.0 together==1.5.29`
+4. Start Puppeteer MCP: `npx -y @modelcontextprotocol/server-puppeteer`
+5. Build basic agent loop with official MCP SDK
+6. Test tool calling + vision with Llama 4 Maverick
+7. Test on Amazon (simple goal)
+8. Add Brave Search via MCP SDK stdio transport
+9. Test on Sandbar (complex workflow)
