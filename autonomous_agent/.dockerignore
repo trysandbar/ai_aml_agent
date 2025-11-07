@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+venv_3.14_backup/
+.git
+.gitignore
+test_screenshots/
+*.log
+.DS_Store

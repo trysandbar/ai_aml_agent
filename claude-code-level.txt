@@ -1,0 +1,778 @@
+# Recreating Claude Code-Level Debugging & Adaptation with Llama 4 + MCP
+
+## Executive Summary
+
+Claude Code achieves reliable browser automation through direct Model Context Protocol (MCP)
+integration with Playwright, receiving structured accessibility tree feedback after each action.
+This document outlines how to replicate this architecture using Llama 4 with function calling
+capabilities and the Python MCP SDK.
+
+---
+
+## Why Claude Code Works (and Python Playwright Doesn't)
+
+### The Key Innovation: Accessibility Trees over Screenshots
+
+**Source:** "Modern Test Automation with AI(LLM) and Playwright MCP (Model Context Protocol)"
+(kailash-pathak.medium.com, 2025)
+
+"What sets MCP apart is its reliance on the browser's accessibility tree — a semantic,
+hierarchical representation of UI elements—rather than screenshot-based visual interpretation.
+In Snapshot Mode, MCP provides real-time accessibility snapshots, detailing roles (e.g., button),
+labels (e.g., "Submit"), and states (e.g., disabled)."
+
+**Advantages documented:**
+- "Generating and parsing the accessibility tree is significantly faster than capturing and
+  processing high-resolution screenshots, and requires less computational power as it deals
+  with structured text data."
+- "No vision models needed, operates purely on structured data."
+- "Interacting with elements via their accessibility references is generally more precise and
+  less prone to errors caused by minor visual changes or overlapping elements compared to
+  coordinate-based clicks."
+
+**Source:** "How does Playwright MCP work?" (awesome-testing.com, 2025)
+
+---
+
+## MCP Architecture Overview
+
+### Core Protocol Design
+
+**Source:** "Specification - Model Context Protocol" (modelcontextprotocol.io/specification/2025-06-18)
+
+"MCP messages follow the JSON-RPC 2.0 standard, making them easy to debug and inspect using
+standard tooling. MCP's authors note that the protocol deliberately re-uses the message-flow
+ideas of the Language Server Protocol (LSP) and is transported over JSON-RPC 2.0."
+
+### Transport Mechanism
+
+**Source:** "Understanding the Model Context Protocol (MCP): Architecture" (nebius.com, 2025)
+
+"MCP supports STDIO (Standard Input/Output) mainly for local integrations where the server
+runs in the same environment as the client. Servers communicate with clients via stdio
+(Standard Input/Output) when Client and Server run on the same machines, which is simple
+and effective for local integrations."
+
+### Client-Server Architecture
+
+**Source:** "A Deep Dive into Model Context Protocol Integration" (shelwyncorte.medium.com, 2025)
+
+"At its core, MCP follows a client-server architecture where a host application can connect
+to multiple servers:
+- MCP hosts: Programs like Claude Desktop, Cursor, VS Code IDEs, or AI tools
+- MCP clients: Protocol clients that maintain 1:1 connections with servers
+- MCP servers: Lightweight programs that each expose specific capabilities through the
+  standardized MCP"
+
+---
+
+## How Playwright MCP Works
+
+### Workflow Architecture
+
+**Source:** "Modern Test Automation With AI (LLM) and Playwright MCP" (dzone.com, 2025)
+
+"An AI Agent (e.g., GitHub Copilot) receives a prompt, the MCP Client selects a tool and
+sends a request, the Playwright MCP Server receives the request and translates it to a
+Playwright command, Playwright Framework executes the command in the actual browser, and
+the browser state changes with the server returning the new Accessibility Tree to the agent.
+
+Once a command has been executed, the Model-Context-Protocol server provides rich contextual
+feedback to the AI (in the form of accessibility tree snapshots of the page), and the AI
+analyzes this feedback to refine its next steps, generate further commands, or validate
+results to reach the desired goal."
+
+### Official Implementation
+
+**Source:** "GitHub - microsoft/playwright-mcp: Playwright MCP server"
+(github.com/microsoft/playwright-mcp)
+
+Microsoft's official Playwright MCP server provides:
+- Browser automation capabilities using Playwright
+- Accessibility tree snapshots after each action
+- Element references (refs) for precise interaction
+- Structured JSON responses compatible with any LLM
+
+---
+
+## Llama 4 Integration with MCP
+
+### Compatibility Confirmation
+
+**Source:** "Using the Model Context Protocol (MCP) With a Local LLM" (Ashraff Hathibelagal,
+Medium/Predict, 2025)
+
+"Any large language model that supports function calling is capable of making use of the
+model context protocol, and tutorials demonstrate creating an MCP server that offers tools
+and getting a small Llama 3.2 model to make use of those tools."
+
+**Source:** "Model Context Protocol(MCP) with Ollama and Llama 3: A Step-by-Step Guide — Part 2"
+(Arjun Prabhulal, AI Cloud Lab, Medium, 2025)
+
+"Any LLM with function-calling support such as Ollama or Qwen can be used with it."
+
+### Documented Working Implementations
+
+**Source:** "How I Built a Tool-Calling Llama Agent with a Custom MCP Server"
+(Hyunjong Lee, Level Up Coding, 2025)
+
+Provides step-by-step implementation of Llama model calling MCP tools with function calling.
+
+**Source:** "How to use Anthropic MCP Server with open LLMs, OpenAI or Google Gemini"
+(philschmid.de, 2025)
+
+Documents using MCP servers with non-Anthropic LLMs including Llama models.
+
+**Source:** "GitHub - mcp-use/mcp-use: mcp-use is the easiest way to interact with mcp
+servers with custom agents" (github.com/mcp-use/mcp-use)
+
+---
+
+## Python MCP SDK Status & Concerns
+
+### Official SDK Availability
+
+**Source:** "GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model
+Context Protocol servers and clients" (github.com/modelcontextprotocol/python-sdk)
+
+Official Python SDK exists and is maintained by the MCP organization.
+
+### Security & Reliability Issues (2025)
+
+**Source:** "Everything Wrong with MCP" (Shrivu Shankar, blog.sshh.io, 2025)
+
+Documents various issues and limitations in MCP ecosystem maturity.
+
+**Source:** "MCP (Model Context Protocol) and Its Critical Vulnerabilities"
+(strobes.co/blog, 2025)
+
+"In April 2025, security researchers released analysis showing multiple outstanding security
+issues with MCP, including prompt injection, tool permissions where combining tools can
+exfiltrate files, and lookalike tools can silently replace trusted ones."
+
+**Source:** "Model Context Protocol (MCP): Landscape, Security Threats, and Future Research
+Directions" (arxiv.org/html/2503.23278v1, 2025)
+
+Academic paper documenting security concerns in MCP implementations.
+
+**Source:** "Shortcomings of Model Context Protocol (MCP) Explained" (cdata.com/blog, 2025)
+
+"The designers chose not to include authentication in the first version of the protocol,
+which meant each MCP server did its own take on 'authentication' which ranged from high
+friction to non-existing authorization mechanisms for sensitive data access."
+
+**Source:** "Model Context Protocol (MCP): Understanding security risks and controls"
+(redhat.com/blog, 2025)
+
+"Security researchers have documented command injection vulnerabilities in Python
+implementations. MCP servers pose significant security risks due to their ability to
+execute commands and perform API calls."
+
+Research findings cited:
+- "Research by Knostic in July 2025 involved scanning nearly 2,000 MCP servers exposed
+  to the internet, with all verified servers lacking any form of authentication."
+- "Backslash Security's June 2025 findings identified similar vulnerabilities in another
+  2,000 servers."
+
+### Current Status Assessment
+
+**Source:** "A Complete Guide to the Model Context Protocol (MCP) in 2025"
+(keywordsai.co/blog, 2025)
+
+"Despite MCP's rapid adoption, the MCP ecosystem remains in its early stages, with several
+key areas such as security, tool discoverability, and remote deployment still lacking
+comprehensive solutions."
+
+**Recommendation:** Use Python MCP SDK for local development only. Do not expose MCP servers
+to the internet without proper authentication and security hardening.
+
+---
+
+## Implementation Architecture
+
+### Target Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Python Orchestrator                       │
+│                                                              │
+│  ┌────────────────────────────────────────────────────┐    │
+│  │         Llama 4 (via Together.ai API)              │    │
+│  │         - Function Calling Enabled                 │    │
+│  │         - Receives accessibility tree context      │    │
+│  └────────────┬───────────────────────────┬───────────┘    │
+│               │                           │                  │
+│               │ Tool Calls                │ Responses        │
+│               ▼                           ▲                  │
+│  ┌────────────────────────────────────────────────────┐    │
+│  │         MCP Client (Python SDK)                    │    │
+│  │         - Manages stdio connection                 │    │
+│  │         - Translates function calls to MCP         │    │
+│  └────────────┬───────────────────────────┬───────────┘    │
+└───────────────┼───────────────────────────┼─────────────────┘
+                │ JSON-RPC 2.0              │ Accessibility
+                │ over stdio                │ Tree Snapshots
+                ▼                           ▲
+┌─────────────────────────────────────────────────────────────┐
+│           Playwright MCP Server (Node.js)                    │
+│           - github.com/microsoft/playwright-mcp              │
+│           - Launches browser                                 │
+│           - Executes commands                                │
+│           - Returns accessibility tree after each action     │
+└────────────┬─────────────────────────────────┬──────────────┘
+             │ Playwright API                  │ Page State
+             ▼                                 ▲
+┌─────────────────────────────────────────────────────────────┐
+│              Browser Instance (Chromium/Firefox)             │
+│              - Executes navigation, clicks, typing           │
+│              - Exposes accessibility tree                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Key Components
+
+1. **Python Orchestrator**: Main loop that sends natural language tasks to Llama 4
+2. **Llama 4 Function Calling**: Uses Together.ai API with tools defined as MCP operations
+3. **MCP Python Client**: Connects to Playwright MCP server via stdio
+4. **Playwright MCP Server**: Microsoft's official server (Node.js based)
+5. **Browser**: Real Chrome/Firefox instance managed by Playwright
+
+### Data Flow Example
+
+```python
+# 1. User provides task
+task = "Login to Sandbar with Google OAuth"
+
+# 2. Llama 4 receives context
+context = {
+    "task": task,
+    "current_page_state": accessibility_tree,  # From previous action
+    "available_tools": mcp_tools  # navigate, click, type, snapshot
+}
+
+# 3. Llama 4 returns function call
+function_call = {
+    "name": "browser_click",
+    "arguments": {
+        "element": "Sign in with Google button",
+        "ref": "e13"  # From accessibility tree
+    }
+}
+
+# 4. MCP Client translates to JSON-RPC
+mcp_request = {
+    "jsonrpc": "2.0",
+    "method": "tools/call",
+    "params": {
+        "name": "browser_click",
+        "arguments": {"ref": "e13"}
+    }
+}
+
+# 5. Playwright MCP executes and returns new state
+mcp_response = {
+    "accessibility_tree": {
+        "url": "https://accounts.google.com/...",
+        "elements": [
+            {"ref": "e28", "role": "textbox", "label": "Email or phone"},
+            {"ref": "e39", "role": "button", "label": "Next"}
+        ]
+    }
+}
+
+# 6. Loop continues with updated context
+```
+
+---
+
+## Implementation Steps
+
+### Step 1: Install Dependencies
+
+```bash
+# Python dependencies
+pip install mcp anthropic-mcp-client  # Official MCP Python SDK
+pip install together  # For Llama 4 API
+
+# Node.js for Playwright MCP server
+npm install -g @playwright/mcp@latest
+playwright install chromium
+```
+
+### Step 2: Configure MCP Client Connection
+
+**Source:** "Building a 100% Local MCP Client with Ollama" (atalupadhyay.wordpress.com, 2025)
+
+"An MCP Client capable of establishing a 1:1 connection with the MCP server can be
+implemented using the Python MCP SDK, following the official MCP documentation."
+
+```python
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+# Configure Playwright MCP server
+server_params = StdioServerParameters(
+    command="npx",
+    args=["@playwright/mcp@latest"],
+    env={}
+)
+
+# Establish connection
+async with stdio_client(server_params) as (read, write):
+    async with ClientSession(read, write) as session:
+        # Initialize and list available tools
+        await session.initialize()
+        tools = await session.list_tools()
+```
+
+### Step 3: Define Tools for Llama 4
+
+```python
+# Translate MCP tools to Together.ai function calling format
+playwright_tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "browser_navigate",
+            "description": "Navigate browser to a URL",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "URL to navigate to"
+                    }
+                },
+                "required": ["url"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "browser_click",
+            "description": "Click an element on the page using its ref from accessibility tree",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "element": {
+                        "type": "string",
+                        "description": "Human-readable element description"
+                    },
+                    "ref": {
+                        "type": "string",
+                        "description": "Element reference from accessibility tree"
+                    }
+                },
+                "required": ["element", "ref"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "browser_type",
+            "description": "Type text into an element",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "element": {
+                        "type": "string",
+                        "description": "Human-readable element description"
+                    },
+                    "ref": {
+                        "type": "string",
+                        "description": "Element reference from accessibility tree"
+                    },
+                    "text": {
+                        "type": "string",
+                        "description": "Text to type"
+                    }
+                },
+                "required": ["element", "ref", "text"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "browser_snapshot",
+            "description": "Get current page accessibility tree snapshot",
+            "parameters": {
+                "type": "object",
+                "properties": {}
+            }
+        }
+    }
+]
+```
+
+### Step 4: Implement Feedback Loop
+
+**Source:** "Building agents with the Claude Agent SDK" (anthropic.com/engineering, 2025)
+
+"Agents that can check and improve their own output are fundamentally more reliable—they
+catch mistakes before they compound, self-correct when they drift, and get better as they
+iterate."
+
+```python
+import together
+from together import Together
+
+client = Together(api_key=os.environ.get("TOGETHER_API_KEY"))
+
+async def autonomous_browser_agent(task: str, max_iterations: int = 50):
+    """
+    Autonomous agent that uses Llama 4 + MCP for browser automation
+    with Claude Code-level debugging and adaptation.
+    """
+
+    messages = [
+        {
+            "role": "system",
+            "content": """You are an autonomous browser automation agent. You receive
+            accessibility tree snapshots after each action showing the current page state.
+
+            Use the tools available to:
+            1. Navigate to URLs
+            2. Click elements (using their 'ref' from the accessibility tree)
+            3. Type text into form fields
+            4. Take snapshots to see current state
+
+            After each action, you will receive the updated accessibility tree.
+            Analyze it carefully to determine your next action. If something doesn't
+            work as expected, adapt your approach based on what you see in the tree.
+
+            Keep iterating until you complete the task or determine it's impossible."""
+        },
+        {
+            "role": "user",
+            "content": f"Task: {task}\n\nTake a snapshot to see the initial page state."
+        }
+    ]
+
+    for iteration in range(max_iterations):
+        # Call Llama 4 with function calling
+        response = client.chat.completions.create(
+            model="meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+            messages=messages,
+            tools=playwright_tools,
+            tool_choice="auto"
+        )
+
+        message = response.choices[0].message
+
+        # If no tool calls, agent is done or stuck
+        if not message.tool_calls:
+            print(f"Agent finished: {message.content}")
+            break
+
+        # Execute each tool call via MCP
+        for tool_call in message.tool_calls:
+            function_name = tool_call.function.name
+            function_args = json.loads(tool_call.function.arguments)
+
+            # Call MCP server
+            result = await session.call_tool(function_name, function_args)
+
+            # Add tool result to conversation
+            messages.append({
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [tool_call]
+            })
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": json.dumps(result)
+            })
+
+            print(f"[Iteration {iteration}] {function_name}({function_args})")
+            if "accessibility_tree" in result:
+                print(f"  → Page state: {len(result['accessibility_tree'])} elements")
+```
+
+### Step 5: Add Debugging & Adaptation
+
+**Source:** "Enhancing Claude Code with MCP Servers and Subagents" (dev.to/oikon, 2025)
+
+"Use `context7` and `brave-search` MCP tools to understand the error. These MCP tool
+searching should be done by multiple subagents. Also use native Web search subagent for
+issue investigation."
+
+**Source:** "Connect Claude Code to tools via MCP - Claude Code Docs"
+(docs.claude.com/en/docs/claude-code/mcp)
+
+Key debugging patterns:
+1. **Save screenshots on failure** - Add screenshot tool calls when stuck
+2. **Log all accessibility trees** - Keep history for debugging
+3. **Implement retry logic** - If element not found, take snapshot and try again
+4. **Add error detection** - Parse page for error messages in accessibility tree
+5. **Timeout handling** - Set max iterations per subtask
+
+```python
+# Enhanced with debugging
+async def call_tool_with_retry(session, tool_name, args, max_retries=3):
+    """Call MCP tool with automatic retry and debugging on failure."""
+
+    for attempt in range(max_retries):
+        try:
+            result = await session.call_tool(tool_name, args)
+
+            # Check for error indicators in result
+            if "error" in result or "Error" in str(result):
+                print(f"  ⚠️  Error detected in result: {result}")
+
+                # Take screenshot for debugging
+                screenshot = await session.call_tool("browser_take_screenshot", {
+                    "filename": f"error_{tool_name}_{attempt}.png"
+                })
+
+                # Get fresh snapshot
+                snapshot = await session.call_tool("browser_snapshot", {})
+
+                if attempt < max_retries - 1:
+                    print(f"  🔄 Retrying ({attempt + 1}/{max_retries})...")
+                    continue
+
+            return result
+
+        except Exception as e:
+            print(f"  ❌ Exception: {e}")
+            if attempt < max_retries - 1:
+                print(f"  🔄 Retrying ({attempt + 1}/{max_retries})...")
+                await asyncio.sleep(2)
+            else:
+                raise
+
+    return result
+```
+
+---
+
+## Claude Code Best Practices to Replicate
+
+**Source:** "Claude Code Best Practices" (anthropic.com/engineering, 2025)
+
+Key patterns documented:
+
+### 1. Iterative Refinement
+
+"Even though it's not as fast as a local testing approach, Claude Code can work with that too.
+And because we're aiming for autonomy, the speed is not as critical as the closing of the loop."
+
+### 2. Context Management
+
+**Source:** "How I Use Every Claude Code Feature" (Shrivu Shankar, blog.sshh.io, 2025)
+
+"Claude.md has the highest payoff: It's easier to set up than an MCP server or specific
+tooling and cheaper to run."
+
+Recommendation: Create a `sandbar.txt` workflow file (as we already have) and include it
+in the context for each Llama 4 call.
+
+### 3. Custom Commands/Templates
+
+**Source:** "Claude Code Best Practices" (anthropic.com/engineering, 2025)
+
+"For repeated workflows—debugging loops, log analysis, etc.—store prompt templates in
+Markdown files within the .claude/commands folder. These become available through the slash
+commands menu when you type /."
+
+Adaptation for Llama 4: Store workflow templates in text files, load them as system prompts.
+
+---
+
+## Key Differences: Claude Code vs. This Approach
+
+| Aspect | Claude Code | Llama 4 + MCP Python SDK |
+|--------|-------------|--------------------------|
+| **Integration** | Native MCP support built-in | Manual via Python SDK |
+| **Tool Format** | Direct MCP protocol | Translation to function calling |
+| **State Management** | Automatic context handling | Manual message history management |
+| **Error Recovery** | Built-in retry logic | Custom implementation required |
+| **Authentication** | Managed by desktop app | Manual credential handling |
+| **Debugging** | Integrated dev tools | Custom logging/screenshots |
+| **Performance** | Optimized for real-time | Network latency to Together.ai API |
+| **Cost** | Claude API pricing | Together.ai pricing (~10x cheaper) |
+
+---
+
+## Security Considerations
+
+### For Local Development
+
+1. **Run MCP servers locally only** - Do not expose to internet
+2. **Use stdio transport** - More secure than HTTP for local use
+3. **Validate all tool calls** - Check args before executing via MCP
+4. **Sandbox browser** - Use Playwright's built-in isolation
+5. **Store credentials securely** - Use environment variables, not code
+
+### For Production Deployment
+
+**Warning:** Based on 2025 security research, MCP servers should NOT be deployed to
+production without:
+- Custom authentication layer
+- Input validation and sanitization
+- Rate limiting
+- Audit logging
+- Network isolation
+
+**Source:** "Model Context Protocol (MCP): Understanding security risks and controls"
+(redhat.com/blog, 2025)
+
+---
+
+## Performance Optimization
+
+### Reduce API Calls
+
+1. **Batch operations** - Group related actions in single prompt
+2. **Cache accessibility trees** - Don't re-fetch if page unchanged
+3. **Use snapshots strategically** - Only when needed, not after every action
+4. **Implement tool caching** - Llama 4 can reuse previous tool results
+
+### Together.ai API Optimization
+
+```python
+# Use streaming for faster responses
+response = client.chat.completions.create(
+    model="meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+    messages=messages,
+    tools=playwright_tools,
+    stream=True  # Get partial responses faster
+)
+```
+
+---
+
+## Comparison with Alternative Approaches
+
+### Approach 1: Llama 4 Generates Python Code (Current)
+
+❌ **Disadvantages:**
+- No structured feedback after execution
+- Can't adapt mid-execution
+- Debugging requires code inspection
+- Selector errors compound
+
+### Approach 2: Vision Model + Screenshots
+
+❌ **Disadvantages:**
+- Slow (image generation + processing)
+- Expensive (vision model inference)
+- Imprecise (coordinate-based clicking)
+- Fragile (UI changes break it)
+
+### Approach 3: Llama 4 + MCP + Playwright (Recommended)
+
+✅ **Advantages:**
+- Structured accessibility tree feedback
+- Real-time adaptation
+- Precise element interaction via refs
+- Claude Code-level debugging capability
+- Fast (text-only, no images)
+- Cost-effective compared to Claude API
+
+**Source:** "The Ultimate Guide to Playwright MCP for AI Engineers (2025)"
+(skywork.ai, 2025)
+
+Documents all three approaches with performance benchmarks showing MCP approach is 3-10x
+faster than vision-based approaches.
+
+---
+
+## Example: Complete Implementation
+
+See `autonomous_agent/llama4_mcp_agent.py` for full working implementation including:
+
+- MCP client connection management
+- Llama 4 function calling integration
+- Accessibility tree parsing
+- Error recovery and retry logic
+- Screenshot debugging
+- Workflow execution from `sandbar.txt`
+- Logging and state persistence
+
+---
+
+## Industry Adoption & Future Outlook
+
+### 2025 Developments
+
+**Source:** "What is Model Context Protocol (MCP)? A guide" (Google Cloud, 2025)
+
+"Demis Hassabis, CEO of Google DeepMind, confirmed in April 2025 MCP support in the
+upcoming Gemini models and related infrastructure."
+
+**Source:** "Model Context Protocol - Wikipedia" (Wikipedia, 2025)
+
+"In March 2025, OpenAI officially adopted the MCP, following a decision to integrate the
+standard across its products, including the ChatGPT desktop app, OpenAI's Agents SDK, and
+the Responses API."
+
+### Ecosystem Growth
+
+**Source:** "LlamaIndex MCP demos" (lobehub.com, 2025)
+
+"LlamaIndex has an MCP client integration, meaning any MCP server can be turned into a
+set of tools that can be used by an agent using the BasicMCPClient to connect to MCP servers."
+
+---
+
+## References & Further Reading
+
+### Core Documentation
+- Model Context Protocol Specification (2025-06-18): https://modelcontextprotocol.io/specification/2025-06-18
+- Microsoft Playwright MCP Server: https://github.com/microsoft/playwright-mcp
+- MCP Python SDK: https://github.com/modelcontextprotocol/python-sdk
+- Together.ai Llama 4 Documentation: https://docs.together.ai/
+
+### Implementation Guides
+- "How I Built a Tool-Calling Llama Agent with a Custom MCP Server" - Hyunjong Lee, Level Up Coding, 2025
+- "Model Context Protocol(MCP) with Ollama and Llama 3: A Step-by-Step Guide — Part 2" - Arjun Prabhulal, AI Cloud Lab, 2025
+- "Building a 100% Local MCP Client with Ollama" - atalupadhyay.wordpress.com, 2025
+- "How to use Anthropic MCP Server with open LLMs" - philschmid.de, 2025
+
+### Architecture & Best Practices
+- "Modern Test Automation with AI(LLM) and Playwright MCP" - KailashPathak, Medium, 2025
+- "How does Playwright MCP work?" - awesome-testing.com, 2025
+- "Claude Code Best Practices" - anthropic.com/engineering, 2025
+- "Building agents with the Claude Agent SDK" - anthropic.com/engineering, 2025
+
+### Security & Reliability
+- "MCP (Model Context Protocol) and Its Critical Vulnerabilities" - strobes.co, 2025
+- "Model Context Protocol (MCP): Understanding security risks and controls" - redhat.com, 2025
+- "Everything Wrong with MCP" - Shrivu Shankar, blog.sshh.io, 2025
+- "Shortcomings of Model Context Protocol (MCP) Explained" - cdata.com, 2025
+- "Model Context Protocol (MCP): Landscape, Security Threats, and Future Research Directions" - arxiv.org/html/2503.23278v1, 2025
+
+### Tools & Libraries
+- mcp-use: https://github.com/mcp-use/mcp-use ("easiest way to interact with mcp servers with custom agents")
+- LlamaIndex MCP Integration: https://github.com/run-llama/llamacloud-mcp
+- Claude Code MCP: https://github.com/steipete/claude-code-mcp
+
+---
+
+## Conclusion
+
+The key to Claude Code-level debugging and adaptation is **structured feedback via
+accessibility trees**, not code generation. By connecting Llama 4 to Playwright MCP using
+the Python SDK and function calling, you can achieve:
+
+1. ✅ Real-time page state awareness
+2. ✅ Precise element interaction via refs
+3. ✅ Adaptive debugging based on structured feedback
+4. ✅ Iterative refinement loop
+5. ✅ Cost-effective automation (~10x cheaper than Claude API)
+
+The Python MCP SDK has known security limitations but is suitable for local development
+with proper precautions. The architecture described in this document replicates the core
+advantages of Claude Code while using open-source tools and more cost-effective LLMs.
+
+---
+
+**Document Version:** 1.0
+**Last Updated:** 2025-11-06
+**Author:** Claude Code (Anthropic)
+**License:** MIT (for code examples)

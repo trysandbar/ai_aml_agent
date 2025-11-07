@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  mcp-agent:
+    build: .
+    container_name: mcp-agent
+    environment:
+      - TOGETHER_API_KEY=${TOGETHER_API_KEY}
+    volumes:
+      - ./test_screenshots:/app/test_screenshots
+      - ./.env:/app/.env:ro
+    # For debugging
+    stdin_open: true
+    tty: true
