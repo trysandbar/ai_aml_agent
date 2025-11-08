@@ -1,0 +1,6 @@
+Go to https://app.dev.sandbar.ai, click "Customers" in the sidebar, pick any customer with alerts, view their AI Summary badge, and answer:
+
+1. Customer name?
+2. AI Summary badge?
+3. Decision (Clear=NO MATCH, Review/Investigate=MATCH)?
+4. URL?
