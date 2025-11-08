@@ -45,10 +45,14 @@ Thumbs.db
 # Logs
 *.log
 
-# Screenshots and audit data (S3-ready structure)
+# Audit trails and screenshots (compliance data)
+audit_logs/
 ai_agent_audit/
 test_screenshots/
 screenshots/
 *.png
 *.jpg
-*.json
+
+# Session files (contain auth cookies)
+*_session.json
+*_session.json.bak

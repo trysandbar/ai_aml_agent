@@ -12,7 +12,8 @@ AI AML Agent - Browser automation for AML verification workflows.
 - Use existing patterns from reference implementations
 
 ### Web Search Policy
-Always Get the current date before web searching
+Get today's date with `date +%Y-%m-%d` before web searching (don't web search for date)
+
 **ALWAYS web search for:**
 - API syntax and best practices
 - Python features and syntax

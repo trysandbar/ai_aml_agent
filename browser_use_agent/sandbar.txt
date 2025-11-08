@@ -1,0 +1,152 @@
+Complete the Sandbar AML customer review workflow:
+
+## Login Flow (Steps 1-8)
+1. Navigate to https://app.dev.sandbar.ai
+2. Wait 4 seconds for the page to fully load
+3. Scroll down 0.3 pages slowly to simulate reading
+4. Wait 2 seconds
+5. Scroll back up 0.3 pages
+6. You should see a page with "Sign into your account" heading
+7. Click the button that says "Sign in with Google" (it has the Google logo)
+8. Wait 5 seconds for Google sign-in page to load
+9. Scroll down 0.2 pages to view the full form
+10. Wait 2 seconds
+11. Find the email input field and type: {EMAIL}
+12. Wait 1 second
+13. Scroll down 0.1 pages
+14. Click the blue "Next" button
+15. Wait 4 seconds for the password page to load (you'll see "Welcome" and your email)
+16. Scroll down 0.2 pages
+17. Wait 2 seconds
+18. Find the password input field and type: {PASSWORD}
+19. Wait 1 second
+20. Click the blue "Next" button
+21. Wait 15 seconds - Google will either show 2FA or redirect directly to tenant page
+22. Scroll down 0.2 pages to see what's on the page
+23. Wait 2 seconds
+24. If you see "2-Step Verification" heading or any 2FA prompts:
+    - Scroll down 0.3 pages
+    - Wait 10 seconds
+    - Scroll up 0.2 pages
+    - Wait another 30 seconds (human is clicking Yes on phone)
+    - Wait another 20 seconds for redirect to complete
+25. After redirect, you should now see a page with a table
+26. The table should have multiple tenant names with columns: Name, Slug, Created at
+
+## Tenant Selection (Steps 27-31)
+27. Scroll down 0.3 pages to view the tenant table
+28. Wait 2 seconds
+29. Look at the table - it has columns: Name, Slug, Created at
+30. Find the row where Name column says "Current"
+31. Click anywhere on that row (the "Current" row)
+32. Wait 4 seconds - you should now be at a URL containing "/current"
+
+## Navigate to Customers (Steps 33-37)
+33. You are now on the Sandbar dashboard (URL contains /current)
+34. Scroll down 0.2 pages
+35. Wait 1 second
+36. Look for a navigation link or button that says "Customers" - it might be in a sidebar on the left or in the top navigation
+37. Click on the "Customers" link to navigate to the customers page
+38. Wait 4 seconds for the customers page to load
+
+## Verify Customers Page (Step 39)
+39. Scroll down 0.3 pages to view customer table
+40. Wait 2 seconds
+41. You should see:
+    - A table with columns: Name, Alerts, Onboarded date
+    - Multiple customer rows (names like "Robert Hindman", "Robert Stetser", etc.)
+    - Some customers have "—" in Alerts column, some have badges like "PEP"
+    - A "Load more" button at the bottom
+
+## Filter for Open Alerts (Steps 42-57)
+42. Scroll up 0.2 pages to see the top of the table
+43. Wait 2 seconds for the page to fully load
+44. Look for a button with 3 horizontal lines that looks like an inverted triangle, located above "Name" column header, to the left of the table
+45. Click that horizontal lines button to open the filter panel
+46. Wait 3 seconds for the filter panel to appear on the left side
+47. Wait 1 more second to ensure all filter options are loaded
+48. Scroll down 0.1 pages to view filter options
+49. Wait 1 second
+50. In the filter panel, you should see options like: Name, Customer ID, Type, Onboarded date, Alert status, Alert type, etc.
+51. Find the "Alert status" field in the filter panel
+52. Click on the "Alert status" field itself (NOT any button next to it) to expand its dropdown options
+53. Wait 2 seconds for the dropdown menu to fully appear
+54. You should now see a dropdown menu with 4 options: Open, Closed, Deprecated, No alerts
+55. Each option has an icon - look for "Open" which has a red circle icon next to it
+56. Click on the "Open" option in the dropdown menu (the one with the red circle icon)
+57. Wait 2 seconds
+58. Click somewhere outside the filter panel to close it
+59. Wait 3 seconds - you should see "Alert status: Open" badge appear at the top of the table and the table is now filtered to show only customers with open alerts
+
+## Load More Customers (Steps 60-75)
+60. Scroll down slowly to the bottom of the customer table
+61. Wait 2 seconds for any dynamic content to load
+62. Click the "Load more" button
+63. Wait 4 seconds for new customers to load
+64. Scroll to bottom again
+65. Wait 1 second
+66. Click "Load more" button
+67. Wait 4 seconds for new customers to load
+68. Scroll to bottom again
+69. Wait 1 second
+70. Click "Load more" button
+71. Wait 4 seconds for new customers to load
+72. Scroll to bottom one more time
+73. Wait 1 second
+74. Click "Load more" button one final time (4 clicks total)
+75. Wait 4 seconds for final batch of customers to load
+76. You should now see 40-50 customers in the table
+
+## Find Customer to Review (Steps 77-84)
+77. Scroll down all the way to the bottom of the customer table to see the last customers loaded
+78. Wait 2 seconds
+79. Scroll up 0.3 pages from the bottom to review customers near the end of the list
+80. Wait 2 seconds to let the page stabilize
+81. Look carefully at the customer table
+82. Pick any customer that has badges or text in the "Alerts" column (NOT just "—")
+83. Examples of customers to click:
+    - Customer with "PEP" badge
+    - Customer with "SANCTIONS" badge
+    - Customer with numbered badges like "2"
+84. Remember this customer's name
+85. IMPORTANT: Pick a customer from the bottom half of the list, not from the top
+
+## Click Customer (Steps 86-88)
+86. Click on the row of the customer you identified (click on their name)
+87. Wait 5 seconds for the customer detail page to load
+88. Scroll down 0.3 pages to view the page content
+89. Wait 2 seconds for the page to fully render
+
+## Read AI Summary (Steps 90-95)
+90. Wait 2 seconds
+91. Scroll down slowly 0.4 pages
+92. On the customer page, look for a section with heading "AI Summary"
+93. Next to "AI Summary" you should see a colored badge
+94. The badge will say one of these:
+    - "Clear" (green) = NOT suspicious
+    - "Review" (yellow/orange) = Needs review
+    - "Investigate" (red) = Suspicious
+95. Remember what the badge says
+
+## Determine Decision (Step 96)
+96. Based on what the AI Summary badge said:
+    - If badge was "Clear" → Decision: NO MATCH
+    - If badge was "Review" → Decision: MATCH
+    - If badge was "Investigate" → Decision: MATCH
+
+## Report Results (Steps 97-98)
+97. Use evaluate() to check the current URL and page title
+98. Describe what you accomplished:
+    - What was the customer name you reviewed?
+    - What did the AI Summary badge say?
+    - What decision did you determine (MATCH or NO MATCH)?
+    - What is the current URL?
+
+GOAL_ACHIEVED when you complete step 98 and can report:
+- Successfully logged in and selected Current tenant
+- Navigated to customers page
+- Filtered for Open alerts
+- Loaded more customers (4 times)
+- Found and clicked a customer with alerts from the bottom half of the list
+- Read their AI Summary badge
+- Determined the appropriate decision (MATCH or NO MATCH)

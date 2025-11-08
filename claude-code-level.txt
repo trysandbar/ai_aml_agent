@@ -684,15 +684,20 @@ faster than vision-based approaches.
 
 ## Example: Complete Implementation
 
-See `autonomous_agent/llama4_mcp_agent.py` for full working implementation including:
+See `mcp_agent/agent.py` for full working implementation including:
 
-- MCP client connection management
-- Llama 4 function calling integration
-- Accessibility tree parsing
-- Error recovery and retry logic
-- Screenshot debugging
-- Workflow execution from `sandbar.txt`
-- Logging and state persistence
+- MCP client connection management (MCPClientWithRetry wrapper)
+- Llama 4 function calling integration (Together.ai API)
+- Accessibility tree parsing and logging
+- Error recovery and retry logic with exponential backoff
+- Screenshot debugging (auto-capture on errors)
+- Configuration management (AgentConfig from environment)
+- Self-contained implementation (can be used independently)
+
+Complete setup instructions: `mcp_agent/README.md`
+
+**Note:** Implementation is self-contained in `mcp_agent/` directory and can be used
+independently from other code in the repository.
 
 ---
 
